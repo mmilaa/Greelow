@@ -1,0 +1,2 @@
+﻿STATUS: 400
+{"errors":[{"field":"email","message":"email is required"},{"field":"password","message":"password is required"}]}

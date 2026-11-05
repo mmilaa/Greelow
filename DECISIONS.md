@@ -49,7 +49,12 @@ Trabajo con TypeScript en modo estricto y con `strictTemplates`. Modelo los esta
 ### 16. CORS
 Probé las llamadas a la API directamente desde el navegador y no hubo problemas de CORS, así que no hace falta configurar un proxy en `ng serve`. No toqué el mock-api.
 
-### 17. Tradeoffs / lo que no implementé y por qué
+### 17. Mapeo central de errores de la API
+Centralicé el manejo de errores para traducir las respuestas de la API a errores tipados, teniendo en cuenta el status, el formato del body y el contexto de la operación. Evité depender del texto que devuelve la API para no mostrar mensajes en inglés al usuario.
+
+También separé la clasificación de errores de los efectos del interceptor y de los mensajes que se muestran en la UI. Me pareció importante mantener esa lógica en un único lugar y que no dependa de Angular.
+
+### 18. Tradeoffs / lo que no implementé y por qué
 1. No implementé la conversión de monedas en las transferencias entre monedas distintas: por ahora las bloqueo. La conversión quedaría como mejora futura.
 2. No implementé alta ni edición de cuentas: quedaría como mejora futura.
 3. El saldo disponible solo protege a quien usa esta app; el sobregiro provocado desde afuera o por condiciones de carrera no se puede evitar desde el cliente. La solución de fondo es del backend.

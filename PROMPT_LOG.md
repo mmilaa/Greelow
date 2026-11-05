@@ -182,3 +182,44 @@ todo de application/infrastructure).
 
 **Decisión:** ✅ aceptado
 **Por qué:** Revisé los casos de prueba, especialmente los límites de intentos y los errores de consulta, para asegurarme de que un problema de red no se confundiera con una transferencia fallida. Como los tests cubrieron los comportamientos esperados y la suite quedó verde, acepté la implementación.
+## #07 · Mapeo central de errores de la API en shared/domain
+**Herramienta:** Kiro
+
+**Prompt:** (resumen) Pedí el diseño antes de escribir nada: una función pura que reciba
+status + body + contexto de operación y devuelva un error de dominio tipado, cómo distingue
+los casos sin mirar el texto del mensaje, dónde vive el catálogo de mensajes en español y
+qué hace con el 401. Esta vez sin TDD: tests junto con la implementación. Le pedí leer los
+samples de error 07, 08, 09, 13, 14, 15, 17, 18 y 19.
+
+### Decisiones que tomé yo (elegí entre las alternativas que me propuso Kiro)
+- **Tipo del error:** `ApiError` como objeto discriminado por `kind`, no clases.
+- **404 en transferencia:** `not-found` genérico, sin un kind propio para el destino.
+- **Errores por campo:** opción (b), mensaje general y resaltar los campos; nunca mostrar el
+  texto crudo (inglés) de la API.
+- **Catálogo de mensajes:** vive en `shared/ui` (`error-messages.ts`).
+- **Alcance:** esta función solo clasifica; el interceptor y el efecto del 401 (limpiar sesión
+  y redirigir) vienen en el prompt de auth.
+- **Casos de test:** acepté mis 6 casos más los A–I que propuso Kiro, y agregué tres: status 0
+  (sin red) da `network` (kind nuevo); 422 fuera de create-transfer da `unknown`; `{ errors: [] }`
+  vacío da `unknown(400)`.
+- **Clasificación sin texto:** se distingue por status + forma del body + contexto de la
+  operación, nunca por el string del mensaje (el 422 solo es fondos insuficientes en
+  transferencia, igual que el 400 con `{ error }` solo es misma cuenta en transferencia).
+
+### Lo que propuso Kiro y yo validé
+- Cómo se conectan el error de red y la liquidación (settlement): el tracker de application
+  clasifica el fallo del GET con `mapApiError`, lo traduce a `TransferStatus = 'unknown'` y deja
+  que `nextSettlementStep` decida. Un error de red al consultar nunca es un fallo de la
+  transferencia. (Solo lo acordamos; no se implementó todavía.)
+
+### Ajuste posterior (segundo prompt, sin cambiar comportamiento)
+- Pedí mover `ApiError` y `mapApiError` (con sus specs) de `core/errors` a `shared/domain`,
+  para que `shared/ui` dependa de `shared` y no de `core`. Y agregar un test de items
+  malformados (`{ errors: [{ field: 1 }] }` da `unknown(400)`).
+
+**Resultado:** `map-api-error.ts` + spec (en `shared/domain`) y `error-messages.ts` + spec (en
+`shared/ui`), todo sin Angular. Tras el ajuste: 17 tests del mapper + 10 del catálogo; carpetas
+`core/errors` y `core` quedaron vacías y se eliminaron. Suite completa 111/111 verde, exit 0.
+
+**Decisión:** ✅ aceptado
+**Por qué:** Acepté la implementación porque la clasificación quedó centralizada y contempla los distintos formatos de error sin depender de los mensajes de la API. También me pareció bien separar esa lógica de los mensajes de la UI y de los efectos del interceptor. Revisé los tests y confirmé que los casos contemplados quedaran cubiertos.
