@@ -1,0 +1,34 @@
+﻿{
+    "transfer":  {
+                     "id":  "transfer-1793894311245",
+                     "status":  "pending",
+                     "from":  {
+                                  "id":  "transfer-1793894311245-out",
+                                  "accountId":  "acc-1",
+                                  "type":  "transfer",
+                                  "direction":  "out",
+                                  "amount":  100,
+                                  "currency":  "ARS",
+                                  "category":  "transfer",
+                                  "description":  "p2p test",
+                                  "status":  "pending",
+                                  "counterpartAccountId":  "acc-4",
+                                  "transferId":  "transfer-1793894311245",
+                                  "createdAt":  "2026-11-05T15:58:31.245Z"
+                              },
+                     "to":  {
+                                "id":  "transfer-1793894311245-in",
+                                "accountId":  "acc-4",
+                                "type":  "transfer",
+                                "direction":  "in",
+                                "amount":  100,
+                                "currency":  "ARS",
+                                "category":  "transfer",
+                                "description":  "p2p test",
+                                "status":  "pending",
+                                "counterpartAccountId":  "acc-1",
+                                "transferId":  "transfer-1793894311245",
+                                "createdAt":  "2026-11-05T15:58:31.245Z"
+                            }
+                 }
+}

@@ -15,15 +15,18 @@ Verificado probando la API:
 - Paginación: { page, pageSize, total }. NO hay totalPages: se calcula en dominio.
 - Montos: number, admite decimales (probado con 12.34). Cada movimiento trae su propio `currency`.
 - Movimiento: type income|expense|transfer; direction "in"|"out"|null (null en ingresos/gastos).
-- Errores: 400 -> { errors: [{ field, message }] }; 422 -> { error: "Insufficient funds in source account" };
-  401 sin token. Son DOS formas de cuerpo distintas.
+- Errores: 400 -> { errors: [{ field, message }] }; 422 -> { error: "Insufficient funds in source account" }; 401 sin token. Son DOS formas de cuerpo distintas.
 - El saldo no cambia mientras la transferencia está `pending`; baja al pasar a `completed`.
 - La API NO convierte monedas: una transferencia ARS->USD de 5000 acreditó 5000 USD.
-- La API permite sobregiro: dos transferencias rápidas que juntas superan el saldo
-  se aceptan ambas y dejan el saldo negativo (race condition).
+- La API permite sobregiro: dos transferencias rápidas que juntas superan el saldo   se aceptan ambas y dejan el saldo negativo (race condition).
+- POST /transfers devuelve el lado `to` completo, incluso si la cuenta es de otro
+  usuario. GET /transfers/:id devuelve ese lado en `null`.
+- Transferir a la misma cuenta devuelve 400 con `{ error: "Cannot transfer to the same account" }`.
+- Transferir a una cuenta inexistente devuelve 404 con `{ error: "Destination account not found" }`.
+- GET /accounts/:id de una cuenta ajena devuelve 404: la moneda de un destino de otro
+  usuario es desconocida antes de enviar.
 
 Según el README, NO probado todavía (tratar con tolerancia):
-- Una transferencia puede traer `from` o `to` en null (cada usuario ve solo su lado).
 - status puede ser `failed` (el filtro lo acepta; el seed no lo genera).
 - counterpartAccountId y transferId pueden ser null.
 - pageSize máx 50. La moneda de una cuenta es inmutable. Las transferencias no se editan (400).

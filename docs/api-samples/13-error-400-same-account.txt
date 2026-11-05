@@ -1,0 +1,2 @@
+﻿STATUS: 400
+{"error":"Cannot transfer to the same account"}
