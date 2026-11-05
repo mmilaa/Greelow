@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { Money } from './money';
-import { CurrencyMismatchError } from './errors';
+import { CurrencyMismatchError, InvalidAmountError } from './errors';
 
 describe('Money', () => {
   describe('construction from a decimal amount', () => {
@@ -14,6 +14,14 @@ describe('Money', () => {
       expect(Money.fromDecimal(0.005, 'USD').amountMinor).toBe(1);
       expect(Money.fromDecimal(0.004, 'USD').amountMinor).toBe(0);
       expect(Money.fromDecimal(1.235, 'USD').amountMinor).toBe(124);
+    });
+
+    it('normalizes a rounded-down negative amount to positive zero', () => {
+      // Math.round(-0.004 * 100) === -0; the value object must not keep a latent -0.
+      const m = Money.fromDecimal(-0.004, 'USD');
+      expect(m.amountMinor).toBe(0);
+      expect(Object.is(m.amountMinor, 0)).toBe(true);
+      expect(Object.is(m.amountMinor, -0)).toBe(false);
     });
 
     it('avoids binary floating point drift', () => {
@@ -39,8 +47,57 @@ describe('Money', () => {
       expect(m.currency).toBe('ARS');
     });
 
-    it('rejects non-integer minor units', () => {
-      expect(() => Money.fromMinor(100.5, 'ARS')).toThrow();
+    it('rejects non-integer minor units with InvalidAmountError', () => {
+      expect(() => Money.fromMinor(100.5, 'ARS')).toThrow(InvalidAmountError);
+    });
+
+    it('normalizes negative zero to positive zero', () => {
+      const m = Money.fromMinor(-0, 'ARS');
+      expect(m.amountMinor).toBe(0);
+      expect(Object.is(m.amountMinor, 0)).toBe(true);
+      expect(Object.is(m.amountMinor, -0)).toBe(false);
+    });
+  });
+
+  describe('invalid amounts', () => {
+    it('fromDecimal rejects NaN with InvalidAmountError', () => {
+      expect(() => Money.fromDecimal(NaN, 'ARS')).toThrow(InvalidAmountError);
+    });
+
+    it('fromDecimal rejects positive and negative Infinity', () => {
+      expect(() => Money.fromDecimal(Infinity, 'USD')).toThrow(InvalidAmountError);
+      expect(() => Money.fromDecimal(-Infinity, 'USD')).toThrow(InvalidAmountError);
+    });
+
+    it('fromMinor rejects NaN and Infinity with InvalidAmountError', () => {
+      expect(() => Money.fromMinor(NaN, 'ARS')).toThrow(InvalidAmountError);
+      expect(() => Money.fromMinor(Infinity, 'ARS')).toThrow(InvalidAmountError);
+      expect(() => Money.fromMinor(-Infinity, 'ARS')).toThrow(InvalidAmountError);
+    });
+
+    it('fromDecimal rejects amounts that overflow the safe integer range', () => {
+      // Number.MAX_SAFE_INTEGER is 9_007_199_254_740_991; * factor pushes past it.
+      expect(() => Money.fromDecimal(Number.MAX_SAFE_INTEGER, 'ARS')).toThrow(
+        InvalidAmountError,
+      );
+    });
+
+    it('fromMinor rejects minor units outside the safe integer range', () => {
+      expect(() => Money.fromMinor(Number.MAX_SAFE_INTEGER + 1, 'ARS')).toThrow(
+        InvalidAmountError,
+      );
+      expect(() => Money.fromMinor(-(Number.MAX_SAFE_INTEGER + 1), 'ARS')).toThrow(
+        InvalidAmountError,
+      );
+    });
+
+    it('fromMinor accepts the boundaries of the safe integer range', () => {
+      expect(Money.fromMinor(Number.MAX_SAFE_INTEGER, 'ARS').amountMinor).toBe(
+        Number.MAX_SAFE_INTEGER,
+      );
+      expect(Money.fromMinor(Number.MIN_SAFE_INTEGER, 'ARS').amountMinor).toBe(
+        Number.MIN_SAFE_INTEGER,
+      );
     });
   });
 

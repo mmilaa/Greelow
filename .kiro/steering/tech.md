@@ -14,8 +14,13 @@
 - Token en sessionStorage (es mock; en producción iría en cookie httpOnly).
   Un interceptor agrega el header; un 401 limpia la sesión y redirige a login;
   un guard protege rutas; GET /auth/me rehidrata la sesión al recargar.
-- Código en inglés, textos de UI en español. Commits convencionales con referencia
-  al número de prompt (ej: "feat: Money VO (prompt #02)").
+- Código en inglés, textos de UI en español.
 - Cada respuesta termina con: qué hiciste, qué supuestos tomaste y qué te quedó dudoso.
-- No modificar DECISIONS.md ni PROMPT_LOG.md: los escribo yo. Si una decisión de
-  diseño merece registrarse, avisame y yo la anoto.
+- No modificar DECISIONS.md ni PROMPT_LOG.md: los escribo yo. Si una decisión de  diseño merece registrarse, avisame y yo la anoto.
+- Formularios: Reactive forms
+- Money: mapa de decimales por moneda en Currency (ARS=2, USD=2, EUR=2).
+- Los pending salientes se leen de GET /transactions?status=pending&type=transfer
+filtrando direction === "out" (el README no tiene listado de /transfer)
+- UI: Angular Material
+- Material solo se usa en `ui/` y `shared/ui/`. Prohibido importarlo desde domain,  application o infrastructure.
+- No agregar otras librerías de UI ni de estilos.

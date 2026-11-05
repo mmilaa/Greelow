@@ -61,3 +61,21 @@ pending salientes, factor de decimales de Money, runner de tests, alcance de cue
 
 **Decisión:** ✅ aceptado
 **Por qué:** Acepté los archivos de test que creó pero considerando que hay que limitar los decimales que ingrese el usuario a 2.
+
+## #03 · Implementación mínima del dominio compartido Money y Currency
+**Herramienta:** Kiro
+
+**Prompt:**
+> Los tests de Money y Currency quedan aprobado como están, implementá lo mínimo
+> para que pasen: currency.ts, money.ts, y errors.ts en shared/domain, sin
+> formatMoney todavia. Corré ng test y mostrame el resultado. Si ves un caso
+> border que no cubren los tests, no lo implementes aun, listamelos.
+
+**Resultado:** Kiro implementó `currency.ts`, `errors.ts` y `money.ts`, sin formatMoney. `ng test` quedó en 28/28 verde (6 Currency + 20 Money + 2 scaffold), exit 0.
+
+Casos borde que detectó y NO implementó aún: entradas NaN/Infinity en fromDecimal; fromMinor con -0; overflow más allá de MAX_SAFE_INTEGER; error de dominio tipado para fromMinor no-entero (hoy tira Error genérico); operaciones faltantes (times/sum/negate/abs); drift flotante en toDecimal para valores no probados.
+
+**Decisión:** ✏️ modificado
+**Por qué:** Respetó el alcance de lo pedido. Con respecto a los casos border, acepté agregar los de entradas inválidas y -0 porque me parecían necesarios. Los demás no lo son por ahora.
+
+
