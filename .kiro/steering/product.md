@@ -51,8 +51,7 @@ Según el README, NO probado todavía (tratar con tolerancia):
    haya una transferencia en vuelo desde esa cuenta.
 5. Representar `failed` en la UI aunque el seed no lo genere.
 6. Soportar saldo negativo sin romper la UI.
-7. Transferir a otra persona: el usuario ingresa el ID de la cuenta destino (no hay
-   endpoint de búsqueda). Supuesto a documentar.
+7. Transferencias: el usuario elige entre las cuentas propias, las cuentas de otros usuarios no están disponibles por no poder verificar su tipo de moneda.
 
 ## Estados de UI obligatorios
 Toda pantalla con datos remotos muestra loading, error (con reintento) y vacío.

@@ -11,6 +11,9 @@ Decidí bloquearlas en una primera etapa. Probé transferir 5000 de una cuenta e
 
 ## Otras decisiones
 
+### Transferencias a cuentas de otro usuario
+La API no permite consultar la moneda de una cuenta ajena y tampoco revierte transferencias. Si las monedas difieren, el dinero se crea y no hay vuelta atrás. Descarté mandar una transferencia de 0.01 para descubrir la moneda (es irreversible y involucra a un tercero) y descarté advertir al usuario, porque tampoco puede saberlo. Decidí permitir transferencias solo entre cuentas propias, donde la moneda siempre es conocida. La solución de fondo es del backend: rechazar monedas distintas o exponer la moneda del destino.
+
 ### Manejo del dinero
 Se guardan los montos como enteros en la unidad mínima (centavos) y no como decimales porque con número de punto flotante las sumas y comparaciones no son exactas y acá estas comparaciones deciden si una transferencia se hace o no.
 
