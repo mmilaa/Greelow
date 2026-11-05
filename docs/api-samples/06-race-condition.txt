@@ -1,0 +1,5 @@
+﻿saldo inicial: 848987.66
+monto de cada transferencia: 509392
+intento 1: OK status=pending
+intento 2: OK status=pending
+saldo final: -169796.34

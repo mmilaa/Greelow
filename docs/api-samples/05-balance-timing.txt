@@ -1,0 +1,4 @@
+﻿antes: 854987.66
+inmediato (pending): 854987.66
+2s despues: 848987.66
+estado final: completed

@@ -1,0 +1,20 @@
+﻿{
+    "accounts":  [
+                     {
+                         "id":  "acc-1",
+                         "userId":  "user-1",
+                         "name":  "Cuenta Pesos",
+                         "currency":  "ARS",
+                         "createdAt":  "2026-08-01T09:00:00Z",
+                         "balance":  855000
+                     },
+                     {
+                         "id":  "acc-2",
+                         "userId":  "user-1",
+                         "name":  "Cuenta Dolares",
+                         "currency":  "USD",
+                         "createdAt":  "2026-08-01T09:00:00Z",
+                         "balance":  440
+                     }
+                 ]
+}

@@ -1,0 +1,34 @@
+﻿{
+    "transfer":  {
+                     "id":  "transfer-1793847594399",
+                     "status":  "pending",
+                     "from":  {
+                                  "id":  "transfer-1793847594399-out",
+                                  "accountId":  "acc-1",
+                                  "type":  "transfer",
+                                  "direction":  "out",
+                                  "amount":  5000,
+                                  "currency":  "ARS",
+                                  "category":  "transfer",
+                                  "description":  "cross currency",
+                                  "status":  "pending",
+                                  "counterpartAccountId":  "acc-2",
+                                  "transferId":  "transfer-1793847594399",
+                                  "createdAt":  "2026-11-05T02:59:54.399Z"
+                              },
+                     "to":  {
+                                "id":  "transfer-1793847594399-in",
+                                "accountId":  "acc-2",
+                                "type":  "transfer",
+                                "direction":  "in",
+                                "amount":  5000,
+                                "currency":  "USD",
+                                "category":  "transfer",
+                                "description":  "cross currency",
+                                "status":  "pending",
+                                "counterpartAccountId":  "acc-1",
+                                "transferId":  "transfer-1793847594399",
+                                "createdAt":  "2026-11-05T02:59:54.399Z"
+                            }
+                 }
+}

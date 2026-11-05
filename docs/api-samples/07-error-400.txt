@@ -1,0 +1,2 @@
+﻿STATUS: 400
+{"errors":[{"field":"amount","message":"amount must be at least 0.01"}]}

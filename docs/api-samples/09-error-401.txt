@@ -1,0 +1,2 @@
+﻿STATUS: 401
+{"error":"Missing or invalid authorization header"}
