@@ -11,6 +11,9 @@ Decidí bloquearlas en una primera etapa. Probé transferir 5000 de una cuenta e
 
 ## Otras decisiones
 
+### Decimales en montos
+Los montos que ingresa el usuario no se redondean, se limitan los decimales que puede ingresar a 2. Esto es porque un número en JavaScript no puede representar exactamente valores como 1.005. Los montos de la API ya vienen con 2 decimales como máximo, y `Money.fromDecimal` redondea solo como defensa.
+
 ### Arquitectura
 ### Signals 
 ### TypeScript estricto
