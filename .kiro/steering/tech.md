@@ -16,7 +16,7 @@
   un guard protege rutas; GET /auth/me rehidrata la sesión al recargar.
 - Código en inglés, textos de UI en español.
 - Cada respuesta termina con: qué hiciste, qué supuestos tomaste y qué te quedó dudoso.
-- No modificar DECISIONS.md ni PROMPT_LOG.md: los escribo yo. Si una decisión de  diseño merece registrarse, avisame y yo la anoto.
+- No modificar DECISIONS.md ni PROMPT_LOG.md: a menos que lo especifique yo.
 - Formularios: Reactive forms
 - Money: mapa de decimales por moneda en Currency (ARS=2, USD=2, EUR=2).
 - Los pending salientes se leen de GET /transactions?status=pending&type=transfer

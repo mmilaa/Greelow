@@ -41,7 +41,7 @@ pending salientes, factor de decimales de Money, runner de tests, alcance de cue
 
 **Por qué:** La idea es que Kiro entienda el proyecto y encuentre inconsistencias antes de empezar a implementar, como sí las encontró, respondí sus preguntas.
 
-## #02 · Respuestas a Kiro y arranque del dominio · 2026-11-0X
+## #02 · Respuestas a Kiro y arranque del dominio 
 **Herramienta:** Kiro 
 
 **Prompt:**
@@ -79,3 +79,71 @@ Casos borde que detectó y NO implementó aún: entradas NaN/Infinity en fromDec
 **Por qué:** Respetó el alcance de lo pedido. Con respecto a los casos border, acepté agregar los de entradas inválidas y -0 porque me parecían necesarios. Los demás no lo son por ahora.
 
 
+## #04 · Casos borde de Money (entradas inválidas y -0)
+**Herramienta:** Kiro
+
+**Prompt:**
+> Con respecto a las preguntas anteriores, sí agrega tests para:
+> 1. Si deberia lanzar error
+> 2. Normalizar a 0, considerando también el caso -0.004
+> 3. Si, usar isSafeInteger
+> 4. Si, que no haya error generico, InvalidAmountError para valores inválidos
+> 5. No por ahora
+> 6. No
+>
+> (y luego) Implementá en money.ts lo necesario para que pasen estos tests, y vuelve a correr ng test
+
+**Resultado:** Kiro agregó tests para NaN/Infinity en fromDecimal, fromMinor no-entero y
+fuera de rango seguro, normalización de -0 (en fromMinor y en fromDecimal con -0.004), y
+creó errors.spec.ts verificando que InvalidAmountError es un DomainError. Implementó la
+validación en money.ts: finitud en fromDecimal, Number.isSafeInteger compartido para
+rechazar no-entero/NaN/Infinity/overflow con InvalidAmountError, y normalización de -0 a
++0 en ambos constructores. `ng test` quedó en 40/40 verde, exit 0.
+
+**Decisión:** ✅ aceptado
+**Por qué:** Revisé los nuevos tests generados a partir de los casos borde que Kiro encontró y ya con esto estaría listo Money por ahora.
+
+## #05 · transfer-policy en features/transfers/domain
+**Herramienta:** Kiro
+
+**Prompt:** (resumen) Diseño previo de availableBalance y canTransfer, destino
+conocido/desconocido, tipos mínimos y orden de validaciones; luego escritura del spec,
+dos rondas de ajustes al spec y la implementación final.
+
+### Decisiones que tomé yo (elegí entre las alternativas que me propuso Kiro)
+- **Forma de `canTransfer`:** elegí la Alternativa A (resultado discriminado con UNA sola
+  razón: `{ allowed: true } | { allowed: false; reason }`) por sobre la Alternativa B
+  (lista de violaciones), porque quiero mostrar un solo error en la UI y un mapeo
+  razón -> mensaje exhaustivo.
+- **Firma de `availableBalance`:** decidí que reciba `balance: Money`, `accountId` y
+  `movements` sueltos, NO una entidad Account.
+- **Contrato de moneda del monto:** decidí que el monto siempre viene en la moneda de la
+  cuenta origen; si no, es un bug del llamador y `Money` debe lanzar CurrencyMismatchError.
+  En la segunda ronda pedí que fuera determinista: validarlo PRIMERO con un chequeo
+  explícito `amount.currency !== source.currency`, antes que cualquier otra validación.
+- **Unificación de razones:** decidí unificar `negative-balance` dentro de
+  `insufficient-funds` (saldo negativo bloquea igual).
+- **Tipos mínimos:** decidí que transfers/domain declare solo los campos que la política
+  necesita (accountId, direction, status, amount), sin importar nada de otras features.
+- **Orden de validación:** fijé yo el orden final: same-account, non-positive-amount,
+  unknown-destination-currency, cross-currency, insufficient-funds.
+- **Ajustes al spec (dos rondas que dicté):** corregir el test de disponible negativo
+  (contable 100000 / pendiente 150000); usar los números de 06-race-condition.txt para el
+  sobregiro; agregar bordes de disponible con pendiente (10000/5000: permite 5000, bloquea
+  5000.01); movimiento con direction null que no resta; disponible 0 con monto 0.01 que
+  bloquea; y CurrencyMismatchError tanto en availableBalance (movimiento en otra moneda)
+  como en canTransfer (incluido destino external con monto en USD).
+
+### Lo que propuso Kiro y yo validé
+- Modelar el destino como unión `own` (moneda conocida) vs `external` (otro usuario, moneda
+  desconocida), con razones de bloqueo distintas (`cross-currency` vs
+  `unknown-destination-currency`). Coherente con lo que ya había decidido en DECISIONS.md.
+- Los casos borde A–F y H del listado inicial de Kiro.
+
+**Resultado:** spec con 29 tests (incluye los casos de 06-race-condition.txt, bordes de
+disponible con pendientes, disponible 0 con monto 0.01, y CurrencyMismatchError en
+availableBalance y en canTransfer). Implementación en transfer-policy.ts solo con
+shared/domain. Suite completa 69/69 verde, exit 0.
+
+**Decisión:** ✅ aceptado con modificaciones
+**Por qué:** Revisé los tests generados y los casos borde que mencionó Kiro. Una vez que el test quedó listo con las modificaciones que pedí, le solicité que implementara transfer-policy.
