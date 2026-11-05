@@ -9,8 +9,8 @@
 - No agregar librerías sin preguntarme antes (justificar cada dependencia).
 - Formularios: no está decidido. Proponer opciones con trade-offs (Reactive Forms vs
   Signal Forms) y esperar mi decisión antes de implementar.
-- CORS: el README del mock no dice nada. Probar desde el navegador; si falla, usar
-  proxy.conf.json de `ng serve`. NO tocar mock-api.
+- CORS: probado desde el navegador, no da problemas. No hace falta proxy.conf.json.
+  NO tocar mock-api.
 - Token en sessionStorage (es mock; en producción iría en cookie httpOnly).
   Un interceptor agrega el header; un 401 limpia la sesión y redirige a login;
   un guard protege rutas; GET /auth/me rehidrata la sesión al recargar.
