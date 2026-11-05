@@ -147,3 +147,38 @@ shared/domain. Suite completa 69/69 verde, exit 0.
 
 **Decisión:** ✅ aceptado con modificaciones
 **Por qué:** Revisé los tests generados y los casos borde que mencionó Kiro. Una vez que el test quedó listo con las modificaciones que pedí, le solicité que implementara transfer-policy.
+## #06 · Liquidación de transferencias (pending -> completed) en features/transfers/domain
+**Herramienta:** Kiro
+
+**Prompt:** (resumen) Pedí el diseño de una función pura de liquidación antes de escribir
+nada (firma, tipos, dónde viven los parámetros, qué queda en domain vs application), con
+mis parámetros tentativos (1000 ms, 6 intentos). Esta vez sin TDD: tests junto con la
+implementación. Le pedí leer los samples 05, 11 y 12.
+
+### Decisiones que tomé yo (elegí entre las alternativas que me propuso Kiro)
+- **Contador:** `attemptsDone` (consultas ya hechas), no `attemptsLeft`.
+- **Tipo del paso:** `SettlementStep` como string literal
+  (`'confirmed' | 'failed' | 'retry' | 'unconfirmed'`), no un objeto, porque no lleva datos.
+- **Primer GET:** después del primer intervalo, no en t=0 (el POST ya dice que está pending).
+- **Config:** no la valido, es una constante nuestra (descarté el caso borde de config inválida).
+- **Parámetros:** confirmé 1000 ms de intervalo y máximo 6 intentos (la API liquida en ~1,5 s).
+- **Fallo de la consulta:** agregué `unknown` como estado de entrada para cuando la consulta
+  falla (red/500). No es un fallo de la transferencia: se trata como `pending` (reintenta si
+  quedan intentos, termina `unconfirmed` si se agotan), nunca como `failed`.
+- **Casos de test:** acepté mis 4 casos núcleo (completed/failed/pending-con-intentos/
+  pending-agotado) más los casos A (borde off-by-one), B (terminal gana aunque se agoten los
+  intentos) y C (config de un solo intento), y pedí sumar los tests de `unknown`.
+
+### Lo que propuso Kiro y yo validé
+- Separar la decisión pura (`nextSettlementStep` en domain) del polling con timers (que irá
+  en application), con `SettlementConfig` y `DEFAULT_SETTLEMENT_CONFIG` en domain.
+- Que la función mire solo `transfer.status` y no dependa de `from`/`to` (el sample 12 trae
+  `to: null`): ese null lo maneja el mapper de infraestructura, no la función de liquidación.
+
+**Resultado:** `settlement.ts` y `settlement.spec.ts` escritos juntos, sin Angular. 15 tests
+nuevos; suite completa 84/84 verde, exit 0. Kiro listó los casos borde que quedan fuera del
+dominio (config inválida descartada, el polling con timers, el mapeo de status y el `to:null`,
+todo de application/infrastructure).
+
+**Decisión:** ✅ aceptado
+**Por qué:** Revisé los casos de prueba, especialmente los límites de intentos y los errores de consulta, para asegurarme de que un problema de red no se confundiera con una transferencia fallida. Como los tests cubrieron los comportamientos esperados y la suite quedó verde, acepté la implementación.
