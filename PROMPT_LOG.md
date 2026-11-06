@@ -281,3 +281,49 @@ frontend/src quedó sin resultados. Suite 154/154 verde, exit 0, sin cambios de 
 
 **Decisión:** ✅ aceptado
 **Por qué:** Hice este ajuste para mantener los nombres consistentes en todo el proyecto y evitar mezclar los conceptos de movement y transaction. Revisé que los renombres no cambiaran la lógica y que los tests siguieran pasando.
+## #10 · Puertos y adaptadores HTTP
+**Herramienta:** Kiro
+
+**Prompt:** (resumen) Pedí el diseño antes de escribir nada: los puertos como clases abstractas en application y sus métodos; si devuelven Promise u Observable con los trade-offs; cómo falla un adaptador (HttpErrorResponse -> { status, body } -> mapApiError -> qué lanza); cómo resolver la paginación de los pendientes para el saldo disponible; y la URL base y cómo probar los adaptadores. Sin TDD: tests junto con la implementación.
+
+### Decisiones que tomé yo (elegí entre las alternativas que me propuso Kiro)
+- **Promise en todos los puertos**, no Observable: uso signals y no quiero arrastrar RxJS;
+  queda confinado al adaptador.
+- **Una sola familia de errores hacia application:** `ApiErrorException extends Error` con
+  `.error` y `.cause`, en shared/domain junto a mapApiError. El adaptador atrapa el
+  `InvalidDataError` de un cuerpo corrupto y lo relanza como kind nuevo `invalid-response`
+  dejando el original en cause. Agregué ese kind y su mensaje en el catálogo de shared/ui.
+- **Pendientes paginados:** pedir todas las páginas con un tope de 20; si falla cualquier
+  página, lanzar sin devolver una lista parcial. La iteración vive en el adaptador; la regla
+  de negocio sigue en el dominio con la lista ya completa.
+- **URL base:** `API_BASE_URL` como InjectionToken en core/config.
+- **Puertos:** saqué accounts.getById; dejé transfers.getById y pendingOutgoing en
+  TransferPort; sin feature categories (CategoryPort va en transactions/application).
+- **Casos de test:** mis 5 casos más los A–I que propuso Kiro, más dos: falla de una página
+  a mitad de la paginación lanza sin lista parcial, y un 200 con cuerpo corrupto sube como
+  invalid-response.
+
+### Lo que propuso Kiro y yo validé
+- Confinar RxJS al adaptador (firstValueFrom en el borde) para que application solo vea Promises.
+- La excepción a "tests sin TestBed": los adaptadores son el único código que toca Angular, así
+  que se prueban con HttpTestingController. Dominio y aplicación se siguen probando puros.
+- Pedí además que los puertos se conecten con los adaptadores (los providers) en un solo lugar.
+
+**Resultado:** puertos, adaptadores HTTP, `runRequest` en core, API_BASE_URL, providers y tests
+con HttpTestingController. Suite 170/170 verde, exit 0.
+
+**Decisión:** ✅ aceptado
+**Por qué:** Acepté la implementación porque permite mantener la lógica de la aplicación independiente de Angular y centraliza el acceso a la API en los adaptadores. También me pareció importante resolver toda la paginación de pendientes antes de calcular el saldo disponible, para no trabajar con información incompleta.
+
+## #11 · Ajustes a puertos y adaptadores
+**Herramienta:** Kiro
+
+**Prompt:** (resumen) Cuatro ajustes: mover dataAccessProviders a la raíz de la app para que core no importe de features; que el tope de 20 páginas en pendingOutgoing lance ApiErrorException 'invalid-response' con el motivo en cause (no un Error genérico); agregar un test del tope (total absurdo lanza y no pide más de 20 páginas); y reemplazar el helper con await Promise.resolve() por vi.waitFor en los tests de paginación.
+
+**Resultado:** moví los providers a `app/app.providers.ts` y borré `core/providers.ts` (core
+quedó con runRequest y API_BASE_URL); el tope lanza ApiErrorException 'invalid-response' con
+cause; agregué el test del tope; cambié los tests de paginación a vi.waitFor. Suite 171/171
+verde, exit 0, y buscar "features/" dentro de core quedó sin resultados.
+
+**Decisión:** ✅ aceptado
+**Por qué:** Acepté los ajustes porque mejoran la separación entre capas y el manejo de errores en casos límite. También se agregaron tests para verificar que el límite de páginas se respete y que core no dependa de ninguna feature.

@@ -23,7 +23,14 @@ export interface FieldError {
   message: string;
 }
 
-/** Typed domain error. Discriminated by `kind`; the UI maps each kind to Spanish text. */
+/**
+ * Typed domain error. Discriminated by `kind`; the UI maps each kind to Spanish text.
+ *
+ * `invalid-response` is not produced by `mapApiError` (a 2xx response cannot be an
+ * error at the HTTP level). The infrastructure adapter produces it when a 2xx body
+ * fails to map to the domain (an InvalidDataError), so application sees a single
+ * error family (ApiErrorException) regardless of where the failure happened.
+ */
 export type ApiError =
   | { kind: 'validation'; fields: FieldError[] }
   | { kind: 'same-account' }
@@ -32,7 +39,23 @@ export type ApiError =
   | { kind: 'invalid-credentials' }
   | { kind: 'unauthenticated' }
   | { kind: 'network' }
+  | { kind: 'invalid-response' }
   | { kind: 'unknown'; status: number };
+
+/**
+ * The single exception type thrown across the infrastructure boundary toward
+ * application. Carries the typed `ApiError` and, when it wraps another error
+ * (e.g. an InvalidDataError from a corrupt 2xx body), the original as `cause`.
+ */
+export class ApiErrorException extends Error {
+  constructor(
+    readonly error: ApiError,
+    options?: { cause?: unknown },
+  ) {
+    super(`ApiError: ${error.kind}`, options);
+    this.name = 'ApiErrorException';
+  }
+}
 
 /** Narrows a body of the shape `{ errors: [{ field, message }, ...] }`. */
 function hasFieldErrors(body: unknown): body is { errors: FieldError[] } {

@@ -1,5 +1,11 @@
 import { describe, it, expect } from 'vitest';
-import { mapApiError, type ApiErrorResponse, type ApiOperation } from './map-api-error';
+import {
+  mapApiError,
+  ApiErrorException,
+  type ApiErrorResponse,
+  type ApiOperation,
+} from './map-api-error';
+import { InvalidDataError } from './errors';
 
 function response(status: number, body: unknown): ApiErrorResponse {
   return { status, body };
@@ -137,5 +143,22 @@ describe('mapApiError', () => {
       });
       expect(mapApiError(response(418, null), 'read')).toEqual({ kind: 'unknown', status: 418 });
     });
+  });
+});
+
+describe('ApiErrorException', () => {
+  it('is an Error carrying the typed ApiError', () => {
+    const err = new ApiErrorException({ kind: 'network' });
+    expect(err).toBeInstanceOf(Error);
+    expect(err).toBeInstanceOf(ApiErrorException);
+    expect(err.error).toEqual({ kind: 'network' });
+    expect(err.name).toBe('ApiErrorException');
+  });
+
+  it('wraps the original error as cause (invalid-response over an InvalidDataError)', () => {
+    const original = new InvalidDataError('bad body');
+    const err = new ApiErrorException({ kind: 'invalid-response' }, { cause: original });
+    expect(err.error).toEqual({ kind: 'invalid-response' });
+    expect(err.cause).toBe(original);
   });
 });

@@ -48,6 +48,12 @@ describe('errorMessage', () => {
     );
   });
 
+  it('maps invalid-response', () => {
+    expect(errorMessage({ kind: 'invalid-response' })).toBe(
+      'Recibimos una respuesta inesperada del servidor. Intentá de nuevo.',
+    );
+  });
+
   it('maps unknown', () => {
     expect(errorMessage({ kind: 'unknown', status: 500 })).toBe(
       'Ocurrió un error inesperado. Intentá de nuevo.',
@@ -63,6 +69,7 @@ describe('errorMessage', () => {
       { kind: 'invalid-credentials' },
       { kind: 'unauthenticated' },
       { kind: 'network' },
+      { kind: 'invalid-response' },
       { kind: 'unknown', status: 0 },
     ];
     for (const e of samples) {

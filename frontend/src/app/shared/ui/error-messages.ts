@@ -24,6 +24,8 @@ export function errorMessage(error: ApiError): string {
       return 'Tu sesión expiró. Volvé a iniciar sesión.';
     case 'network':
       return 'No pudimos conectarnos. Revisá tu conexión e intentá de nuevo.';
+    case 'invalid-response':
+      return 'Recibimos una respuesta inesperada del servidor. Intentá de nuevo.';
     case 'unknown':
       return 'Ocurrió un error inesperado. Intentá de nuevo.';
   }
