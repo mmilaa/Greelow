@@ -1,0 +1,14 @@
+﻿{
+    "categories":  [
+                       "salary",
+                       "freelance",
+                       "rent",
+                       "groceries",
+                       "transport",
+                       "entertainment",
+                       "utilities",
+                       "health",
+                       "transfer",
+                       "other"
+                   ]
+}

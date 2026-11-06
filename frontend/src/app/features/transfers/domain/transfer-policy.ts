@@ -8,8 +8,8 @@ import { CurrencyMismatchError } from '../../../shared/domain/errors';
  * Pure TypeScript: only depends on shared/domain, never on `@angular/*`.
  */
 
-/** Minimal movement shape the policy needs to compute reserved funds. */
-export interface TransferMovement {
+/** Minimal transaction shape the policy needs to compute reserved funds. */
+export interface AccountTransaction {
   accountId: string;
   direction: 'in' | 'out' | null;
   status: 'pending' | 'completed' | 'failed';
@@ -35,7 +35,7 @@ export interface TransferRequest {
   source: TransferSource;
   destination: TransferDestination;
   amount: Money;
-  movements: TransferMovement[];
+  transactions: AccountTransaction[];
 }
 
 /** Why a transfer was blocked. The UI layer maps each reason to a message. */
@@ -52,15 +52,15 @@ export type TransferCheck =
 
 /**
  * Available balance = ledger balance minus outgoing pending transfers of this
- * account. Incoming, completed and failed movements do not reserve funds, and
- * movements with a null direction (income/expense) are never reservations.
+ * account. Incoming, completed and failed transactions do not reserve funds, and
+ * transactions with a null direction (income/expense) are never reservations.
  */
 export function availableBalance(
   balance: Money,
   accountId: string,
-  movements: TransferMovement[],
+  transactions: AccountTransaction[],
 ): Money {
-  return movements
+  return transactions
     .filter(
       (m) =>
         m.accountId === accountId &&
@@ -76,7 +76,7 @@ export function availableBalance(
  * deterministically, before any block reason is considered.
  */
 export function canTransfer(request: TransferRequest): TransferCheck {
-  const { source, destination, amount, movements } = request;
+  const { source, destination, amount, transactions } = request;
 
   // Deterministic currency contract: the amount must be in the source currency.
   // A mismatch is a caller bug, checked explicitly before any block reason.
@@ -100,7 +100,7 @@ export function canTransfer(request: TransferRequest): TransferCheck {
     return blocked('cross-currency');
   }
 
-  const available = availableBalance(source.balance, source.accountId, movements);
+  const available = availableBalance(source.balance, source.accountId, transactions);
   if (amount.isGreaterThan(available)) {
     return blocked('insufficient-funds');
   }

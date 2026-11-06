@@ -223,3 +223,61 @@ samples de error 07, 08, 09, 13, 14, 15, 17, 18 y 19.
 
 **Decisión:** ✅ aceptado
 **Por qué:** Acepté la implementación porque la clasificación quedó centralizada y contempla los distintos formatos de error sin depender de los mensajes de la API. También me pareció bien separar esa lógica de los mensajes de la UI y de los efectos del interceptor. Revisé los tests y confirmé que los casos contemplados quedaran cubiertos.
+## #08 · DTOs y mappers de la API
+**Herramienta:** Kiro
+
+**Prompt:** (resumen) Pedí el diseño antes de escribir nada: los DTOs y tipos de dominio de
+cuentas, transacciones y transferencias y dónde vive cada uno; los mappers DTO -> dominio con
+los montos a Money; qué hacer ante un dato inválido; cómo modelar from/to en null; y la
+paginación sin totalPages. Le pedí leer los samples 01, 02, 03, 04, 10, 11, 12, 20 y 21, y usar fragmentos copiados como fixtures.
+
+### Decisiones que tomé yo (elegí entre las alternativas que me propuso Kiro)
+- **Dónde viven los tipos:** las entidades que cruzan features (Account, Transaction, Page)
+  van en `shared/domain`; `Transfer` queda en `features/transfers/domain` porque solo la usa
+  esa feature (importa Transaction de shared). Así ninguna feature importa de otra.
+- **Dato inválido:** el mapper lanza (`InvalidDataError`), no descarta el elemento, porque si
+  desaparece una transacción cambia el saldo que ve el usuario. Híbrido: lanzo en lo
+  monetario/estructural (amount, currency, type, status, direction, id) y normalizo lo que no
+  (description a '', category a 'other').
+- **from/to null:** cada lado se mapea independiente; si ambos son null, lanza.
+- **createdAt:** string ISO, sin convertir a Date.
+- **Coherencia type/direction:** un transfer sin dirección, o un income/expense con dirección,
+  lanzan.
+- **Camino de ida:** sin helper `toAmountDecimal`; pedí mappers de petición
+  (dominio -> body de la API) para crear transacción y crear transferencia, con el monto en decimal.
+- **Casos de test:** mis 7 casos más los A–I que propuso Kiro.
+
+### Lo que propuso Kiro y yo validé
+- La función pura `totalPages(total, pageSize)` en el dominio (la API no manda totalPages).
+- Un módulo de helpers de parsing en shared para no duplicar validación entre mappers.
+
+### Ajustes posteriores (sin cambiar comportamiento)
+- Moví el DTO + mapper de la transacción a `shared/infrastructure` para que
+  transfers/infrastructure no importe de transactions/infrastructure.
+- Declaré `userId` en AccountDto, saqué un cast del fixture, saqué un re-export que ya no
+  se usaba, y agregué un par de tests (sin pagination lanza; items malformados dan unknown(400)
+  en el caso del movimiento).
+
+**Resultado:** tipos compartidos, Transfer en su feature, DTOs/mappers (incluidos los de
+petición) y 42 tests nuevos. Suite 154/154 verde, exit 0.
+
+**Decisión:** ✅ aceptado
+**Por qué:** Acepté la implementación porque los mappers separan correctamente los datos de la API de los modelos que usa la aplicación. Me pareció especialmente importante no descartar registros con datos inválidos cuando pueden afectar los saldos o movimientos del usuario. También revisé los casos de null y los tests para asegurarme de que se manejaran como esperaba.
+
+## #09 · Consolidación del naming a "transaction"
+**Herramienta:** Kiro
+
+**Prompt:** (resumen) Noté que el DTO se llamaba TransactionDto dentro de un archivo
+`movement.dto.ts`, una inconsistencia que arrastraba del rename anterior. Pedí unificar todo
+bajo "transaction" y, en un segundo prompt, limpiar lo que quedaba: renombrar TransferMovement
+a AccountTransaction y el parámetro movements a transactions en transfer-policy (solo rename,
+sin cambiar lógica), renombrar el dto de la feature a transactions-page.dto.ts para que no se
+llame igual que el de shared, sacar un re-export y tipar userId como string.
+
+**Resultado:** renombré la entidad de dominio Movement -> Transaction y todo lo derivado
+(archivo, tipos, mapper mapTransaction, constantes), AccountTransaction en la policy y sus
+tests, y el dto de la feature a transactions-page.dto.ts. Una búsqueda de "movement" en
+frontend/src quedó sin resultados. Suite 154/154 verde, exit 0, sin cambios de comportamiento.
+
+**Decisión:** ✅ aceptado
+**Por qué:** Hice este ajuste para mantener los nombres consistentes en todo el proyecto y evitar mezclar los conceptos de movement y transaction. Revisé que los renombres no cambiaran la lógica y que los tests siguieran pasando.

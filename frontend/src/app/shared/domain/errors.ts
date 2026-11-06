@@ -23,3 +23,6 @@ export class CurrencyMismatchError extends DomainError {
 
 /** Raised when a monetary amount is invalid (NaN, Infinity, non-integer minor units, or out of safe range). */
 export class InvalidAmountError extends DomainError {}
+
+/** Raised when raw API data cannot be mapped to a valid domain value (missing or invalid field). */
+export class InvalidDataError extends DomainError {}

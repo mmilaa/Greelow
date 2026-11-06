@@ -54,7 +54,14 @@ Centralicé el manejo de errores para traducir las respuestas de la API a errore
 
 También separé la clasificación de errores de los efectos del interceptor y de los mensajes que se muestran en la UI. Me pareció importante mantener esa lógica en un único lugar y que no dependa de Angular.
 
-### 18. Tradeoffs / lo que no implementé y por qué
+### 18. DTOs y mappers de la API
+Separé los DTOs de los tipos de dominio y agregué mappers para convertir entre ambos. Los montos se transforman a Money al recibirlos y vuelven a decimal al enviarlos.
+
+También definí qué hacer con los datos inválidos: si afectan información importante como montos, moneda o estado, el mapper lanza un error en vez de descartar el registro. Los datos opcionales, como la descripción o categoría, se normalizan. Además, dejé en shared los tipos que usan varias features y calculé totalPages, ya que la API no lo devuelve.
+
+Unifiqué el nombre: la entidad de dominio, el DTO y el mapper se llaman todos "transaction", igual que el recurso en la API, para no mezclar vocabulario.
+
+### 19. Tradeoffs / lo que no implementé y por qué
 1. No implementé la conversión de monedas en las transferencias entre monedas distintas: por ahora las bloqueo. La conversión quedaría como mejora futura.
 2. No implementé alta ni edición de cuentas: quedaría como mejora futura.
 3. El saldo disponible solo protege a quien usa esta app; el sobregiro provocado desde afuera o por condiciones de carrera no se puede evitar desde el cliente. La solución de fondo es del backend.

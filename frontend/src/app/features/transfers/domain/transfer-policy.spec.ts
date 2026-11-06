@@ -4,7 +4,7 @@ import { CurrencyMismatchError } from '../../../shared/domain/errors';
 import {
   availableBalance,
   canTransfer,
-  type TransferMovement,
+  type AccountTransaction,
   type TransferRequest,
 } from './transfer-policy';
 
@@ -18,8 +18,8 @@ function usd(amount: number): Money {
   return Money.fromDecimal(amount, 'USD');
 }
 
-/** Builds a movement, defaulting to an outgoing pending transfer (the kind that reserves funds). */
-function movement(overrides: Partial<TransferMovement> = {}): TransferMovement {
+/** Builds a transaction, defaulting to an outgoing pending transfer (the kind that reserves funds). */
+function transaction(overrides: Partial<AccountTransaction> = {}): AccountTransaction {
   return {
     accountId: 'acc-1',
     direction: 'out',
@@ -35,7 +35,7 @@ function request(overrides: Partial<TransferRequest> = {}): TransferRequest {
     source: { accountId: 'acc-1', currency: 'ARS', balance: ars(100000) },
     destination: { kind: 'own', accountId: 'acc-2', currency: 'ARS' },
     amount: ars(5000),
-    movements: [],
+    transactions: [],
     ...overrides,
   };
 }
@@ -43,64 +43,64 @@ function request(overrides: Partial<TransferRequest> = {}): TransferRequest {
 // --- availableBalance ----------------------------------------------------
 
 describe('availableBalance', () => {
-  it('equals the ledger balance when there are no movements', () => {
+  it('equals the ledger balance when there are no transactions', () => {
     const result = availableBalance(ars(100000), 'acc-1', []);
     expect(result.equals(ars(100000))).toBe(true);
   });
 
   it('subtracts a single outgoing pending transfer from the ledger balance', () => {
-    const movements = [movement({ direction: 'out', status: 'pending', amount: ars(30000) })];
-    const result = availableBalance(ars(100000), 'acc-1', movements);
+    const transactions = [transaction({ direction: 'out', status: 'pending', amount: ars(30000) })];
+    const result = availableBalance(ars(100000), 'acc-1', transactions);
     expect(result.equals(ars(70000))).toBe(true);
   });
 
   it('accumulates multiple outgoing pending transfers', () => {
-    const movements = [
-      movement({ amount: ars(20000) }),
-      movement({ amount: ars(15000) }),
+    const transactions = [
+      transaction({ amount: ars(20000) }),
+      transaction({ amount: ars(15000) }),
     ];
-    const result = availableBalance(ars(100000), 'acc-1', movements);
+    const result = availableBalance(ars(100000), 'acc-1', transactions);
     expect(result.equals(ars(65000))).toBe(true);
   });
 
   it('ignores incoming pending transfers (direction "in")', () => {
-    const movements = [movement({ direction: 'in', status: 'pending', amount: ars(40000) })];
-    const result = availableBalance(ars(100000), 'acc-1', movements);
+    const transactions = [transaction({ direction: 'in', status: 'pending', amount: ars(40000) })];
+    const result = availableBalance(ars(100000), 'acc-1', transactions);
     expect(result.equals(ars(100000))).toBe(true);
   });
 
   it('ignores completed and failed transfers', () => {
-    const movements = [
-      movement({ status: 'completed', amount: ars(30000) }),
-      movement({ status: 'failed', amount: ars(25000) }),
+    const transactions = [
+      transaction({ status: 'completed', amount: ars(30000) }),
+      transaction({ status: 'failed', amount: ars(25000) }),
     ];
-    const result = availableBalance(ars(100000), 'acc-1', movements);
+    const result = availableBalance(ars(100000), 'acc-1', transactions);
     expect(result.equals(ars(100000))).toBe(true);
   });
 
   it('ignores outgoing pending transfers from a different account', () => {
-    const movements = [movement({ accountId: 'acc-9', amount: ars(50000) })];
-    const result = availableBalance(ars(100000), 'acc-1', movements);
+    const transactions = [transaction({ accountId: 'acc-9', amount: ars(50000) })];
+    const result = availableBalance(ars(100000), 'acc-1', transactions);
     expect(result.equals(ars(100000))).toBe(true);
   });
 
   it('can produce a negative available balance (pending larger than the ledger balance)', () => {
-    const movements = [movement({ amount: ars(150000) })];
-    const result = availableBalance(ars(100000), 'acc-1', movements);
+    const transactions = [transaction({ amount: ars(150000) })];
+    const result = availableBalance(ars(100000), 'acc-1', transactions);
     expect(result.equals(ars(-50000))).toBe(true);
   });
 
-  it('ignores a pending movement with null direction (income/expense are never reservations)', () => {
-    const movements = [movement({ direction: null, status: 'pending', amount: ars(40000) })];
-    const result = availableBalance(ars(100000), 'acc-1', movements);
+  it('ignores a pending transaction with null direction (income/expense are never reservations)', () => {
+    const transactions = [transaction({ direction: null, status: 'pending', amount: ars(40000) })];
+    const result = availableBalance(ars(100000), 'acc-1', transactions);
     expect(result.equals(ars(100000))).toBe(true);
   });
 
-  it('throws CurrencyMismatchError when a reserving movement is in another currency', () => {
-    // A pending outgoing movement in a different currency than the balance is a
+  it('throws CurrencyMismatchError when a reserving transaction is in another currency', () => {
+    // A pending outgoing transaction in a different currency than the balance is a
     // data bug; Money arithmetic surfaces it rather than silently skipping it.
-    const movements = [movement({ direction: 'out', status: 'pending', amount: usd(100) })];
-    expect(() => availableBalance(ars(100000), 'acc-1', movements)).toThrow(CurrencyMismatchError);
+    const transactions = [transaction({ direction: 'out', status: 'pending', amount: usd(100) })];
+    expect(() => availableBalance(ars(100000), 'acc-1', transactions)).toThrow(CurrencyMismatchError);
   });
 });
 
@@ -125,7 +125,7 @@ describe('canTransfer - allowed', () => {
       request({
         source: { accountId: 'acc-1', currency: 'ARS', balance: ars(10000) },
         amount: ars(5000),
-        movements: [movement({ amount: ars(5000) })],
+        transactions: [transaction({ amount: ars(5000) })],
       }),
     );
     expect(result).toEqual({ allowed: true });
@@ -179,7 +179,7 @@ describe('canTransfer - blocked', () => {
       request({
         source: { accountId: 'acc-1', currency: 'ARS', balance: ars(10000) },
         amount: ars(5000.01),
-        movements: [movement({ amount: ars(5000) })],
+        transactions: [transaction({ amount: ars(5000) })],
       }),
     );
     expect(result).toEqual({ allowed: false, reason: 'insufficient-funds' });
@@ -192,7 +192,7 @@ describe('canTransfer - blocked', () => {
       request({
         source: { accountId: 'acc-1', currency: 'ARS', balance: ars(848987.66) },
         amount: ars(509392),
-        movements: [movement({ amount: ars(509392) })],
+        transactions: [transaction({ amount: ars(509392) })],
       }),
     );
     expect(result).toEqual({ allowed: false, reason: 'insufficient-funds' });
@@ -212,7 +212,7 @@ describe('canTransfer - blocked', () => {
       request({
         source: { accountId: 'acc-1', currency: 'ARS', balance: ars(5000) },
         amount: ars(0.01),
-        movements: [movement({ amount: ars(5000) })],
+        transactions: [transaction({ amount: ars(5000) })],
       }),
     );
     expect(result).toEqual({ allowed: false, reason: 'insufficient-funds' });
@@ -224,7 +224,7 @@ describe('canTransfer - blocked', () => {
       request({
         source: { accountId: 'acc-1', currency: 'ARS', balance: ars(100000) },
         amount: ars(100),
-        movements: [movement({ amount: ars(150000) })],
+        transactions: [transaction({ amount: ars(150000) })],
       }),
     );
     expect(result).toEqual({ allowed: false, reason: 'insufficient-funds' });
