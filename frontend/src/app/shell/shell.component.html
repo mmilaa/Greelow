@@ -1,5 +1,5 @@
-<mat-toolbar color="primary" class="shell-toolbar">
-  <span class="shell-brand">Billetera</span>
+<mat-toolbar class="shell-toolbar">
+  <span class="shell-brand">{{ appName }}</span>
 
   <!-- Desktop navigation -->
   <nav class="shell-nav" aria-label="Navegación principal">
@@ -34,7 +34,7 @@
   </mat-menu>
 
   <!-- User menu -->
-  <button mat-button [matMenuTriggerFor]="userMenu" [attr.aria-label]="'Cuenta de ' + (userName()?.name ?? '')">
+  <button mat-button class="shell-user-button" [matMenuTriggerFor]="userMenu" [attr.aria-label]="'Cuenta de ' + (userName()?.name ?? '')">
     <mat-icon>account_circle</mat-icon>
     <span class="shell-user-name">{{ userName()?.name }}</span>
   </button>

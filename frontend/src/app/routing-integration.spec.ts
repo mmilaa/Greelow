@@ -2,6 +2,7 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { TestBed } from '@angular/core/testing';
 import { provideRouter, Router } from '@angular/router';
 import { RouterTestingHarness } from '@angular/router/testing';
+import { Title } from '@angular/platform-browser';
 import { routes } from './app.routes';
 import { SessionRedirect } from './session-redirect';
 import { AuthPort, type AuthUser, type LoginResult } from './features/auth/application/auth.port';
@@ -86,6 +87,19 @@ describe('routing (integration, real router + guards)', () => {
     const harness = await RouterTestingHarness.create();
     await harness.navigateByUrl('/accounts');
     expect(router.url.startsWith('/login')).toBe(true);
+  });
+
+  it('sets the document title per route', async () => {
+    setup('tok-1');
+    const title = TestBed.inject(Title);
+    const harness = await RouterTestingHarness.create();
+
+    await harness.navigateByUrl('/accounts');
+    expect(title.getTitle()).toBe('Cuentas');
+    await harness.navigateByUrl('/transactions');
+    expect(title.getTitle()).toBe('Movimientos');
+    await harness.navigateByUrl('/transfers');
+    expect(title.getTitle()).toBe('Transferencias');
   });
 
   it('if already authenticated, visiting /login redirects to /accounts', async () => {

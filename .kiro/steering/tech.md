@@ -24,3 +24,4 @@ filtrando direction === "out" (el README no tiene listado de /transfer)
 - UI: Angular Material
 - Material solo se usa en `ui/` y `shared/ui/`. Prohibido importarlo desde domain,  application o infrastructure.
 - No agregar otras librerías de UI ni de estilos.
+- Los colores se usan solo a través de los tokens definidos en el archivo de estilos globales. Prohibido hardcodear colores (hex, rgb, "white", "black") en componentes. Los tokens se nombran por función (superficie, texto, positivo, negativo), no por color.

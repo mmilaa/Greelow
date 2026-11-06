@@ -18,6 +18,7 @@ import { SessionStore } from '../application/session.store';
 import { safeReturnUrl } from '../infrastructure/auth.guard';
 import { ApiErrorException, type ApiError } from '../../../shared/domain/map-api-error';
 import { errorMessage } from '../../../shared/ui/error-messages';
+import { APP_NAME } from '../../../shared/app-name';
 
 const DEFAULT_ROUTE = '/accounts';
 
@@ -54,6 +55,7 @@ export class LoginPage {
     password: ['', [Validators.required]],
   });
 
+  readonly appName = APP_NAME;
   readonly submitting = signal(false);
 
   constructor() {

@@ -5,6 +5,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatMenuModule } from '@angular/material/menu';
 import { SessionStore } from '../features/auth/application/session.store';
+import { APP_NAME } from '../shared/app-name';
 
 /**
  * App shell: top toolbar with navigation and a user menu, plus the outlet for
@@ -29,6 +30,7 @@ import { SessionStore } from '../features/auth/application/session.store';
 export class ShellComponent {
   private readonly session = inject(SessionStore);
 
+  readonly appName = APP_NAME;
   readonly userName = this.session.user;
 
   readonly links = [

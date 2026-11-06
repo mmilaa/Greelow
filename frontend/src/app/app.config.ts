@@ -1,6 +1,14 @@
-import { ApplicationConfig, type Provider, type EnvironmentProviders, provideBrowserGlobalErrorListeners } from '@angular/core';
+import {
+  ApplicationConfig,
+  type Provider,
+  type EnvironmentProviders,
+  provideBrowserGlobalErrorListeners,
+  provideAppInitializer,
+  inject,
+} from '@angular/core';
 import { provideRouter } from '@angular/router';
 import { provideHttpClient, withInterceptors } from '@angular/common/http';
+import { MatIconRegistry } from '@angular/material/icon';
 import { routes } from './app.routes';
 import { dataAccessProviders } from './app.providers';
 import { authInterceptor } from './features/auth/infrastructure/auth.interceptor';
@@ -14,6 +22,11 @@ export const appProviders: (Provider | EnvironmentProviders)[] = [
   provideRouter(routes),
   provideHttpClient(withInterceptors([authInterceptor])),
   dataAccessProviders,
+  // mat-icon renders Material Symbols (the font index.html already loads) as
+  // icons, not text. No new dependency.
+  provideAppInitializer(() => {
+    inject(MatIconRegistry).setDefaultFontSetClass('material-symbols-outlined');
+  }),
 ];
 
 export const appConfig: ApplicationConfig = {

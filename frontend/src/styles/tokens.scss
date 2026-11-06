@@ -1,0 +1,57 @@
+// Design tokens, named BY FUNCTION (not by colour) so a future dark theme can
+// redefine these same names without touching any component. This is the ONLY
+// place in the app where literal colours are allowed.
+//
+// All contrast pairs verified AA with tools/contrast.mjs. Two values differ
+// from the original palette for accessibility margin: positive is #196e3c
+// (margin over its chip background); border-input stays #7b8ca8 (3.41:1, AA UI).
+
+:root {
+  // --- colour (light theme) ---
+  --color-text: #1d3156;
+  --color-text-soft: #4a5b78;
+  --color-on-primary: #ffffff;
+  --color-primary: #35588a;
+  --color-primary-hover: #2a4670;
+  --color-bg: #f4f7fb;
+  --color-surface: #ffffff;
+  --color-surface-alt: #e8eef7;
+  --color-border: #d3dcea;
+  --color-border-input: #7b8ca8;
+  --color-accent-soft: #fde4de;
+
+  // Navigation bar: its own tokens so a dark theme can set them independently
+  // (reusing --color-text as the bar background would break when text turns light).
+  --color-bar: #1d3156;
+  --color-on-bar: #ffffff;
+
+  --color-positive: #196e3c;
+  --color-negative: #b3261e;
+  --color-warning: #8a5a00;
+  --color-positive-bg: #e3f3ea;
+  --color-negative-bg: #fbe7e4;
+  --color-warning-bg: #fcefd2;
+
+  // Shadow and scrim (overlay backdrop) base colours.
+  --color-shadow: #000000;
+  --color-scrim: #000000;
+
+  // --- spacing ---
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-6: 1.5rem;
+  --space-8: 2rem;
+
+  // --- radii ---
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 16px;
+
+  // --- elevation ---
+  --shadow-card: 0 2px 8px rgb(29 49 86 / 8%), 0 1px 2px rgb(29 49 86 / 6%);
+
+  // --- layout ---
+  --page-max-width: 960px;
+}

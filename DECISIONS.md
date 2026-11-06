@@ -79,7 +79,12 @@ Organicé las rutas privadas dentro de un shell con navegación, menú de usuari
 
 Implementé el login con formularios reactivos y manejo de errores según el tipo. También separé la lógica de redirección del store para evitar dependencias con el Router y distinguir entre una sesión expirada y un logout voluntario.
 
-### 22. Tradeoffs / lo que no implementé y por qué
+### 22. Base visual (tema, tokens y componentes compartidos)
+Definí tokens CSS para centralizar los colores, espacios y medidas, y los conecté con el tema de Material para poder cambiar el tema sin modificar los componentes. También agregué un script para verificar el contraste.
+
+Creé los componentes compartidos que se van a reutilizar en las pantallas (montos, estados, carga, error y vacío), junto con algunos ajustes de accesibilidad.
+
+### 23. Tradeoffs / lo que no implementé y por qué
 1. No implementé la conversión de monedas en las transferencias entre monedas distintas: por ahora las bloqueo. La conversión quedaría como mejora futura.
 2. No implementé alta ni edición de cuentas: quedaría como mejora futura.
 3. El saldo disponible solo protege a quien usa esta app; el sobregiro provocado desde afuera o por condiciones de carrera no se puede evitar desde el cliente. La solución de fondo es del backend.

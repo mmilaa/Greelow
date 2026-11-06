@@ -5,6 +5,7 @@ import { authGuard, loginGuard } from './features/auth/infrastructure/auth.guard
 export const routes: Routes = [
   {
     path: 'login',
+    title: 'Ingresar',
     canActivate: [loginGuard],
     loadComponent: () => import('./features/auth/ui/login.page').then((m) => m.LoginPage),
   },
@@ -15,16 +16,19 @@ export const routes: Routes = [
     children: [
       {
         path: 'accounts',
+        title: 'Cuentas',
         loadComponent: () =>
           import('./features/accounts/ui/accounts.page').then((m) => m.AccountsPage),
       },
       {
         path: 'transactions',
+        title: 'Movimientos',
         loadComponent: () =>
           import('./features/transactions/ui/transactions.page').then((m) => m.TransactionsPage),
       },
       {
         path: 'transfers',
+        title: 'Transferencias',
         loadComponent: () =>
           import('./features/transfers/ui/transfers.page').then((m) => m.TransfersPage),
       },

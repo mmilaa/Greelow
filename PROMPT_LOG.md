@@ -427,3 +427,52 @@ build OK. No instalé @angular/animations.
 
 **Decisión:** ✅ aceptado
 **Por qué:** Acepté los ajustes porque mejoran la navegación y la experiencia del login. Me pareció importante probar el routing real y verificar que no hubiera llamadas o redirecciones duplicadas. También se agregó el foco inicial en el campo de email.
+## #15 · Base visual: tema, tokens, componentes compartidos y accesibilidad
+**Herramienta:** Kiro
+
+**Prompt:** (resumen) Pedí el diseño antes de escribir nada: un tema de Material con mi paleta
+(verificando contraste AA), los tokens como variables CSS en un solo archivo nombrados por
+función, los ajustes de login y shell, los componentes compartidos de shared/ui, el formato de
+dinero y cómo se haría el tema oscuro (leyendo la doc de Material de esta versión). Solo el
+tema y los componentes, sin pantallas de datos. Después pedí ajustes de tokens y accesibilidad,
+y correcciones de contraste en la barra.
+
+### Decisiones que tomé yo (elegí entre las alternativas que me propuso Kiro)
+- **Contraste:** le marqué que sus ratios estaban mal calculados; le pedí un script que los
+  calcule ejecutando código (tools/contrast.mjs) y que leyera los valores de tokens.scss para
+  no desincronizarse. Con los reales, dejé el borde de input en #7b8ca8 y acepté positivo
+  #196e3c por margen sobre el chip.
+- **Tokens:** en styles/tokens.scss, nombrados por función, único lugar con colores literales;
+  el tema de Material se mapea a esos tokens (sobreescribí el set completo de --mat-sys-* de
+  color para que no quede ningún tono por defecto). La barra tiene sus propios tokens
+  (--color-bar / --color-on-bar) para no romperse en el tema oscuro.
+- **Barra:** fondo #1d3156 (no el primario).
+- **Íconos:** default font set a Material Symbols (la fuente que ya carga index.html), sin
+  dependencias nuevas.
+- **Dinero:** formatMoney con Intl es-AR y currencyDisplay "code" (ARS 1.234,56), en
+  shared/domain sin Angular; los tests usan el espacio no separable (\u00a0).
+- **Componentes shared/ui:** los cuatro (monto, chip de estado, estados vacío/error/carga,
+  encabezado), con tests de comportamiento y no de DOM/estilos.
+- **Nombre de la app:** una sola constante APP_NAME (elegí MilaPay).
+- **Accesibilidad:** lang="es", título por ruta, aria-label en los botones solo-ícono, y en el
+  monto tabular-nums + nowrap.
+
+### Lo que propuso Kiro y yo validé
+- Que el tema oscuro se resuelve redefiniendo los tokens bajo un selector con color-scheme, sin
+  tocar componentes (leído de la doc de Material v20/22).
+- Que verificara contra node_modules la lista real de tokens --mat-sys-* a sobreescribir.
+
+### Ajustes de contraste de la barra (iterando sobre capturas)
+- Al principio los links de navegación no se leían (Material no hereda el color del toolbar):
+  sobreescribí los tokens de color de los botones de Material en el scope de la barra.
+- Después el hover casi no se notaba y el nombre de usuario quedó invisible por tocar un token
+  interno de MDC: lo resolví con un hover/focus de fondo blanco translúcido y color explícito en
+  el nombre, sin pelear con los internals de Material.
+
+**Resultado:** tema, tokens, script de contraste (todos los pares AA), íconos como Material
+Symbols, formatMoney, los cuatro componentes de shared/ui, los ajustes de login y shell, y la
+accesibilidad. 244/244 verde, ng build OK. Sin dependencias nuevas, sin colores fuera de
+tokens.scss.
+
+**Decisión:** ✅ aceptado con modificaciones
+**Por qué:** Acepté la implementación porque la base visual quedó centralizada y consistente, y los componentes se pueden reutilizar en las distintas pantallas. También revisé el contraste con el script y fui ajustando algunos detalles visuales y de accesibilidad hasta que quedaron como esperaba.

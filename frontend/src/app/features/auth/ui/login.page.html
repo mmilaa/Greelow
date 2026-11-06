@@ -1,21 +1,23 @@
 <div class="login-wrapper">
   <mat-card class="login-card">
-    <mat-card-header>
-      <mat-card-title>Iniciar sesión</mat-card-title>
-    </mat-card-header>
+    <div class="login-brand">
+      <span class="login-brand__name">{{ appName }}</span>
+      <span class="login-brand__tagline">Tu billetera virtual</span>
+    </div>
 
     @if (submitting()) {
       <mat-progress-bar mode="indeterminate" aria-label="Iniciando sesión"></mat-progress-bar>
     }
 
-    <mat-card-content>
+    <mat-card-content class="login-content">
+      <h1 class="login-title">Iniciar sesión</h1>
       <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
         <!-- Server-level error, announced to assistive tech. -->
         @if (serverError(); as message) {
           <p class="login-error" role="alert">{{ message }}</p>
         }
 
-        <mat-form-field appearance="outline" class="login-field">
+        <mat-form-field appearance="outline" class="login-field" subscriptSizing="dynamic">
           <mat-label>Email</mat-label>
           <input
             #emailInput
@@ -32,7 +34,7 @@
           }
         </mat-form-field>
 
-        <mat-form-field appearance="outline" class="login-field">
+        <mat-form-field appearance="outline" class="login-field" subscriptSizing="dynamic">
           <mat-label>Contraseña</mat-label>
           <input
             matInput

@@ -1,11 +1,42 @@
 .shell-toolbar {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: var(--space-2);
+  background: var(--color-bar);
+  color: var(--color-on-bar);
+
+  // Material buttons/icons set their own text colour from tokens, so they do
+  // not inherit the toolbar colour. Override those tokens (not a raw colour) so
+  // the bar's nav links, icons and user button read at full contrast on the bar.
+  // These apply only to elements inside the toolbar; the hamburger MENU PANEL is
+  // rendered in an overlay outside the toolbar, so its items keep the normal
+  // dark-on-surface colour and stay legible.
+  --mat-text-button-label-text-color: var(--color-on-bar);
+  --mat-icon-button-icon-color: var(--color-on-bar);
+  --mat-icon-color: var(--color-on-bar);
+}
+
+// Bar nav links and buttons: full-contrast white text and icons on the navy bar.
+.shell-nav a,
+.shell-menu-button,
+.shell-user-button {
+  color: var(--color-on-bar);
+
+  .mat-icon {
+    color: var(--color-on-bar);
+  }
+
+  // A clearly visible hover/focus background on the dark bar (Material's default
+  // state layer is too faint over navy).
+  &:hover,
+  &:focus-visible {
+    background: color-mix(in srgb, var(--color-on-bar) 16%, transparent);
+  }
 }
 
 .shell-brand {
-  font-weight: 600;
+  font-weight: 700;
+  letter-spacing: -0.5px;
 }
 
 .shell-spacer {
@@ -14,7 +45,7 @@
 
 .shell-nav {
   display: flex;
-  gap: 0.25rem;
+  gap: var(--space-1);
 }
 
 .shell-menu-button {
@@ -22,7 +53,8 @@
 }
 
 .shell-user-name {
-  margin-left: 0.25rem;
+  margin-left: var(--space-1);
+  color: var(--color-on-bar);
 }
 
 .shell-link-active {
@@ -32,7 +64,9 @@
 
 .shell-content {
   display: block;
-  padding: 1.5rem;
+  max-width: var(--page-max-width);
+  margin: 0 auto;
+  padding: var(--space-6);
 }
 
 // Small screens: hide the inline nav, show the hamburger menu.
