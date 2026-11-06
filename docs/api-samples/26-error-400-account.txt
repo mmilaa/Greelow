@@ -1,0 +1,2 @@
+﻿STATUS: 400
+{"errors":[{"field":"name","message":"name must be at least 2 characters"},{"field":"currency","message":"currency must be one of: ARS, USD, EUR"}]}

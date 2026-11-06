@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { TestBed } from '@angular/core/testing';
 import { provideHttpClient } from '@angular/common/http';
 import {
@@ -88,71 +88,5 @@ describe('TransferHttpAdapter', () => {
 
     const transfer = await promise;
     expect(transfer.status).toBe('completed');
-  });
-
-  describe('pendingOutgoing', () => {
-    it('fetches a single page when total fits (case B)', async () => {
-      const promise = port.pendingOutgoing('acc-1');
-      const req = httpMock.expectOne((r) => r.url === `${BASE}/transactions`);
-      expect(req.request.params.get('status')).toBe('pending');
-      expect(req.request.params.get('type')).toBe('transfer');
-      expect(req.request.params.get('accountId')).toBe('acc-1');
-      req.flush({ transactions: [leg(), leg({ id: 't2' })], pagination: { page: 1, pageSize: 50, total: 2 } });
-
-      const pending = await promise;
-      expect(pending).toHaveLength(2);
-      expect(pending[0].direction).toBe('out');
-    });
-
-    // Waits (retrying) until the request for a given page is issued, then returns it.
-    // Pagination is sequential, so each request only appears after the previous resolves.
-    function waitForPage(page: number) {
-      return vi.waitFor(() =>
-        httpMock.expectOne(
-          (r) => r.url === `${BASE}/transactions` && r.params.get('page') === String(page),
-        ),
-      );
-    }
-
-    async function flushPage(page: number, count: number, total: number): Promise<void> {
-      const req = await waitForPage(page);
-      req.flush({
-        transactions: Array.from({ length: count }, (_, i) => leg({ id: `p${page}-${i}` })),
-        pagination: { page, pageSize: 50, total },
-      });
-    }
-
-    it('fetches all pages when total exceeds one page (case A)', async () => {
-      const promise = port.pendingOutgoing('acc-1');
-      await flushPage(1, 50, 120);
-      await flushPage(2, 50, 120);
-      await flushPage(3, 20, 120);
-
-      const pending = await promise;
-      expect(pending).toHaveLength(120);
-    });
-
-    it('throws without a partial list if a page fails mid-pagination', async () => {
-      const promise = port.pendingOutgoing('acc-1');
-      await flushPage(1, 50, 120);
-
-      const page2 = await waitForPage(2);
-      page2.error(new ProgressEvent('error'), { status: 0, statusText: '' });
-
-      await expect(promise).rejects.toMatchObject({ error: { kind: 'network' } });
-    });
-
-    it('throws invalid-response and stops at the page cap on an absurd total', async () => {
-      const promise = port.pendingOutgoing('acc-1');
-      // Every page is full and claims an impossibly large total, so the loop
-      // would never finish: it must stop at the 20-page cap and throw.
-      for (let page = 1; page <= 20; page++) {
-        await flushPage(page, 50, Number.MAX_SAFE_INTEGER);
-      }
-
-      await expect(promise).rejects.toMatchObject({ error: { kind: 'invalid-response' } });
-      // No 21st request is ever issued.
-      httpMock.expectNone((r) => r.url === `${BASE}/transactions` && r.params.get('page') === '21');
-    });
   });
 });

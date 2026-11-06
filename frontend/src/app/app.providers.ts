@@ -8,6 +8,8 @@ import {
 } from './features/transactions/infrastructure/transaction-http.adapter';
 import { TransferPort } from './features/transfers/application/transfer.port';
 import { TransferHttpAdapter } from './features/transfers/infrastructure/transfer-http.adapter';
+import { PendingTransfersPort } from './shared/application/pending-transfers.port';
+import { PendingTransfersHttpAdapter } from './core/data/pending-transfers-http.adapter';
 import { AuthPort } from './features/auth/application/auth.port';
 import { AuthHttpAdapter } from './features/auth/infrastructure/auth-http.adapter';
 import { TokenStoragePort } from './features/auth/application/token-storage.port';
@@ -26,6 +28,7 @@ export const dataAccessProviders: Provider[] = [
   { provide: TransactionPort, useClass: TransactionHttpAdapter },
   { provide: CategoryPort, useClass: CategoryHttpAdapter },
   { provide: TransferPort, useClass: TransferHttpAdapter },
+  { provide: PendingTransfersPort, useClass: PendingTransfersHttpAdapter },
   { provide: AuthPort, useClass: AuthHttpAdapter },
   { provide: TokenStoragePort, useClass: SessionTokenStorage },
   {

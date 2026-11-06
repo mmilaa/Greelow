@@ -1,0 +1,23 @@
+﻿{
+    "transactions":  [
+                         {
+                             "id":  "transfer-1794005447489-out",
+                             "accountId":  "acc-1",
+                             "type":  "transfer",
+                             "direction":  "out",
+                             "amount":  100,
+                             "currency":  "ARS",
+                             "category":  "transfer",
+                             "description":  "pendiente sin accountId",
+                             "status":  "pending",
+                             "counterpartAccountId":  "acc-4",
+                             "transferId":  "transfer-1794005447489",
+                             "createdAt":  "2026-11-06T22:50:47.489Z"
+                         }
+                     ],
+    "pagination":  {
+                       "page":  1,
+                       "pageSize":  50,
+                       "total":  1
+                   }
+}

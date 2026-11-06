@@ -476,3 +476,40 @@ tokens.scss.
 
 **Decisión:** ✅ aceptado con modificaciones
 **Por qué:** Acepté la implementación porque la base visual quedó centralizada y consistente, y los componentes se pueden reutilizar en las distintas pantallas. También revisé el contraste con el script y fui ajustando algunos detalles visuales y de accesibilidad hasta que quedaron como esperaba.
+## #16 · Refactor previo a la pantalla de cuentas (availableBalance y pendientes a shared/core)
+**Herramienta:** Kiro
+
+**Prompt:** (resumen) Antes de escribir la pantalla de cuentas, pedí resolver un problema de arquitectura: `availableBalance` y la lectura de pendientes vivían en features/transfers, y accounts no puede importar de otra feature. Pedí hacer SOLO el refactor (sin pantalla) y parar al terminar, con los tests moviéndose sin perderse.
+
+### Decisiones que tomé yo
+- Levanté la restricción de tocar transfer-policy, pero SOLO para imports y mover tests: su
+  lógica, su API y los casos de canTransfer no cambian.
+- `availableBalance` y `AccountTransaction` van a shared/domain; `AccountTransaction` como
+  `Pick<Transaction, 'accountId' | 'direction' | 'status' | 'amount'>`. Sus tests se mueven a
+  shared/domain/available-balance.spec.ts. transfer-policy importa de shared SIN re-exportar.
+- `PendingTransfersPort` en shared/application, con un único `pendingOutgoing()` que trae TODOS
+  los pendientes salientes del usuario sin accountId (availableBalance filtra por cuenta). Saqué
+  pendingOutgoing de TransferPort.
+- El adaptador va en core/data (no en shared/infrastructure): usa ApiRequestRunner y
+  API_BASE_URL de core, y shared no puede depender de core. Se lleva la paginación (todas las
+  páginas, tope 20, sin lista parcial si una falla). Sus tests se mueven y se ajustan a que la
+  URL ya no lleva accountId.
+- Lo conecté en app.providers.ts.
+
+### Decisiones para la pantalla de cuentas (fijadas acá, para el próximo prompt)
+- Pendientes primero y cuentas después, en secuencia (nada de Promise.all), para errar por
+  defecto (disponible de menos) y nunca habilitar un sobregiro.
+- Si fallan los pendientes o el tope: ready con pendingAvailable=false (saldo contable con
+  aviso). Si falla la lista de cuentas: error. Si availableBalance lanza por dato corrupto: se
+  degrada a solo contable, sin romper la pantalla.
+- Refresh mantiene los datos anteriores con indicador; solo la primera carga usa loading. Fallo
+  de refresh con datos presentes: se mantienen con aviso de desactualizado y reintento.
+- Contador de generación para que una respuesta vieja no pise a una nueva; botón Actualizar
+  deshabilitado mientras recarga. Casos A–I.
+
+**Resultado:** refactor hecho, 244 tests (movidos, ninguno perdido), ng build OK, y el diff de
+transfer-policy.ts fue solo imports (1 insertion, 28 deletions: la interface y la función que
+se movieron). No se escribió la pantalla.
+
+**Decisión:** ✅ aceptado
+**Por qué:** Acepté el refactor porque permite que accounts y transfers compartan la lógica sin depender una de otra. También me pareció bien centralizar la consulta de pendientes y mantener toda la paginación en el adaptador. Revisé que se conservaran los tests y que los cambios no modificaran el comportamiento de las transferencias.

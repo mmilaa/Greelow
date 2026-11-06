@@ -1,20 +1,13 @@
 import { Money } from '../../../shared/domain/money';
 import { type Currency } from '../../../shared/domain/currency';
 import { CurrencyMismatchError } from '../../../shared/domain/errors';
+import { availableBalance, type AccountTransaction } from '../../../shared/domain/available-balance';
 
 /**
  * Transfer policy: the single place that decides whether a transfer is allowed.
  *
  * Pure TypeScript: only depends on shared/domain, never on `@angular/*`.
  */
-
-/** Minimal transaction shape the policy needs to compute reserved funds. */
-export interface AccountTransaction {
-  accountId: string;
-  direction: 'in' | 'out' | null;
-  status: 'pending' | 'completed' | 'failed';
-  amount: Money;
-}
 
 /** Source account, reduced to what the policy reasons about. */
 export interface TransferSource {
@@ -49,26 +42,6 @@ export type TransferBlockReason =
 export type TransferCheck =
   | { allowed: true }
   | { allowed: false; reason: TransferBlockReason };
-
-/**
- * Available balance = ledger balance minus outgoing pending transfers of this
- * account. Incoming, completed and failed transactions do not reserve funds, and
- * transactions with a null direction (income/expense) are never reservations.
- */
-export function availableBalance(
-  balance: Money,
-  accountId: string,
-  transactions: AccountTransaction[],
-): Money {
-  return transactions
-    .filter(
-      (m) =>
-        m.accountId === accountId &&
-        m.direction === 'out' &&
-        m.status === 'pending',
-    )
-    .reduce((available, m) => available.minus(m.amount), balance);
-}
 
 /**
  * Decides whether a transfer is allowed. The amount must be in the source

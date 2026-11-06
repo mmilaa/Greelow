@@ -1,9 +1,11 @@
 import { type Transfer } from '../domain/transfer';
-import { type AccountTransaction } from '../domain/transfer-policy';
 import { type Money } from '../../../shared/domain/money';
 
 /**
  * Port for transfers. Abstract class so it doubles as a DI token.
+ *
+ * Reading pending outgoing transfers (for the available balance) now lives in
+ * the shared PendingTransfersPort, since several features need it.
  *
  * Pure TypeScript: no `@angular/*` imports.
  */
@@ -19,9 +21,4 @@ export interface CreateTransferInput {
 export abstract class TransferPort {
   abstract create(input: CreateTransferInput): Promise<Transfer>;
   abstract getById(id: string): Promise<Transfer>;
-  /**
-   * All outgoing pending transfers of an account, used to compute the available
-   * balance. The adapter fetches every page; a partial result is never returned.
-   */
-  abstract pendingOutgoing(accountId: string): Promise<AccountTransaction[]>;
 }
