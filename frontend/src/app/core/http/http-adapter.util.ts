@@ -3,6 +3,7 @@ import { firstValueFrom, type Observable } from 'rxjs';
 import {
   mapApiError,
   ApiErrorException,
+  type ApiError,
   type ApiOperation,
 } from '../../shared/domain/map-api-error';
 import { InvalidDataError } from '../../shared/domain/errors';
@@ -16,19 +17,24 @@ import { InvalidDataError } from '../../shared/domain/errors';
  * - A successful response whose body fails to map (InvalidDataError thrown by
  *   `map`) becomes an 'invalid-response' ApiErrorException with the original as
  *   cause, so a corrupt 2xx is never swallowed.
+ * - When the classified error is `unauthenticated` (a 401 outside login) and an
+ *   `onUnauthenticated` callback is given, it is invoked (the session expires).
  *
- * This is the only place where HttpErrorResponse is interpreted.
+ * This is the only place where HttpErrorResponse is interpreted. The adapter
+ * passes `onUnauthenticated` (captured via inject in a field initializer), so
+ * this function itself never calls inject.
  */
 export async function runRequest<Raw, Out>(
   source: Observable<Raw>,
   operation: ApiOperation,
   map: (raw: Raw) => Out,
+  onUnauthenticated?: () => void,
 ): Promise<Out> {
   let raw: Raw;
   try {
     raw = await firstValueFrom(source);
   } catch (err) {
-    throw toApiErrorException(err, operation);
+    throw classifyAndSignal(err, operation, onUnauthenticated);
   }
 
   try {
@@ -41,12 +47,19 @@ export async function runRequest<Raw, Out>(
   }
 }
 
-/** Converts an HttpErrorResponse (or anything) into an ApiErrorException. */
-function toApiErrorException(err: unknown, operation: ApiOperation): ApiErrorException {
-  if (err instanceof HttpErrorResponse) {
-    const apiError = mapApiError({ status: err.status, body: err.error }, operation);
-    return new ApiErrorException(apiError, { cause: err });
+/** Classifies an HttpErrorResponse and fires the unauthenticated side effect. */
+function classifyAndSignal(
+  err: unknown,
+  operation: ApiOperation,
+  onUnauthenticated?: () => void,
+): ApiErrorException {
+  const apiError: ApiError =
+    err instanceof HttpErrorResponse
+      ? mapApiError({ status: err.status, body: err.error }, operation)
+      : { kind: 'unknown', status: 0 };
+
+  if (apiError.kind === 'unauthenticated') {
+    onUnauthenticated?.();
   }
-  // Non-HTTP failure (unexpected): surface as a network-like unknown.
-  return new ApiErrorException({ kind: 'unknown', status: 0 }, { cause: err });
+  return new ApiErrorException(apiError, { cause: err });
 }

@@ -62,13 +62,19 @@ También definí qué hacer con los datos inválidos: si afectan información im
 Unifiqué el nombre: la entidad de dominio, el DTO y el mapper se llaman todos "transaction", igual que el recurso en la API, para no mezclar vocabulario.
 
 ### 19. Puertos y adaptadores HTTP
-### 19. Puertos y adaptadores HTTP
 
 Separé los contratos de acceso a datos de su implementación HTTP. Los puertos viven en application y los adaptadores en infrastructure, así la lógica de la aplicación no depende de Angular ni de HttpClient.
 
 También decidí usar `Promise` en los puertos, uso signals en los stores y no quería arrastrar RxJS a todos lados; RxJS queda confinado al adaptador, que resuelve el Observable de HttpClient en el borde. También centralizar el manejo de errores en los adaptadores. Para calcular el saldo disponible, el adaptador obtiene todas las páginas de transferencias pendientes, evitando trabajar con información incompleta. La regla de cálculo sigue estando en el dominio.
 
-### 20. Tradeoffs / lo que no implementé y por qué
+### 20. Autenticación y sesión
+El token se guarda en sessionStorage, pero lo abstraje para que la aplicación no dependa directamente del navegador. El store maneja los estados de sesión y valida el token al recargar mediante /auth/me.
+
+También separé el comportamiento de los errores 401 según la operación: en el login son credenciales incorrectas y en el resto de las requests significa que la sesión expiró. El interceptor agrega el token solo a las requests de la API.
+
+Por último, agregué la validación del returnUrl para evitar redirecciones externas después del login.
+
+### 21. Tradeoffs / lo que no implementé y por qué
 1. No implementé la conversión de monedas en las transferencias entre monedas distintas: por ahora las bloqueo. La conversión quedaría como mejora futura.
 2. No implementé alta ni edición de cuentas: quedaría como mejora futura.
 3. El saldo disponible solo protege a quien usa esta app; el sobregiro provocado desde afuera o por condiciones de carrera no se puede evitar desde el cliente. La solución de fondo es del backend.

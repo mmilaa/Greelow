@@ -16,7 +16,7 @@ import {
   type TransactionsPageDto,
 } from './transactions-page.dto';
 import { API_BASE_URL } from '../../../core/config/api.config';
-import { runRequest } from '../../../core/http/http-adapter.util';
+import { ApiRequestRunner } from '../../../core/http/api-request-runner';
 
 /** Builds HttpParams from a query, omitting undefined fields. */
 function toParams(query: TransactionQuery): HttpParams {
@@ -43,9 +43,10 @@ function toParams(query: TransactionQuery): HttpParams {
 export class TransactionHttpAdapter extends TransactionPort {
   private readonly http = inject(HttpClient);
   private readonly baseUrl = inject(API_BASE_URL);
+  private readonly runner = inject(ApiRequestRunner);
 
   override list(query: TransactionQuery): Promise<Page<Transaction>> {
-    return runRequest(
+    return this.runner.run(
       this.http.get<TransactionsPageDto>(`${this.baseUrl}/transactions`, {
         params: toParams(query),
       }),
@@ -55,7 +56,7 @@ export class TransactionHttpAdapter extends TransactionPort {
   }
 
   override create(input: CreateTransactionInput): Promise<Transaction> {
-    return runRequest(
+    return this.runner.run(
       this.http.post<TransactionDto>(
         `${this.baseUrl}/transactions`,
         toCreateTransactionBody(input),
@@ -71,9 +72,10 @@ export class TransactionHttpAdapter extends TransactionPort {
 export class CategoryHttpAdapter extends CategoryPort {
   private readonly http = inject(HttpClient);
   private readonly baseUrl = inject(API_BASE_URL);
+  private readonly runner = inject(ApiRequestRunner);
 
   override list(): Promise<string[]> {
-    return runRequest(
+    return this.runner.run(
       this.http.get<{ categories: string[] }>(`${this.baseUrl}/categories`),
       'read',
       (raw) => raw.categories,

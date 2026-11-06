@@ -327,3 +327,49 @@ verde, exit 0, y buscar "features/" dentro de core quedó sin resultados.
 
 **Decisión:** ✅ aceptado
 **Por qué:** Acepté los ajustes porque mejoran la separación entre capas y el manejo de errores en casos límite. También se agregaron tests para verificar que el límite de páginas se respete y que core no dependa de ninguna feature.
+## #12 · Autenticación y sesión (diseño, implementación y endurecimiento)
+**Herramienta:** Kiro
+
+**Prompt:** (resumen) Varias vueltas sobre la autenticación, sin pantallas, con los tests
+junto a la implementación. Primero pedí el diseño (puerto de auth y sesión, interceptor,
+guard y rehidratación, redirección con returnUrl, y cómo probar cada pieza). Después pedí
+cuatro ajustes de seguridad y cableado, y finalmente endurecer la validación del returnUrl.
+
+### Decisiones que tomé yo (elegí entre las alternativas que me propuso Kiro)
+- **Capas:** application puede usar signals e inject, pero no el navegador, HTTP ni el Router.
+- **Token:** en sessionStorage detrás de un puerto (`TokenStoragePort`) con respaldo en memoria
+  si sessionStorage lanza. El store guarda el token; `login()` del puerto devuelve { token, user }.
+- **Store de sesión:** máquina de estados anonymous / loading / authenticated; `expire()`
+  idempotente; rehidrata con /auth/me una sola vez y no cachea ni borra el token si falla por
+  algo que no sea un 401.
+- **Interceptor:** solo agrega el header Authorization, y únicamente a requests del mismo
+  origen que la API. La clasificación del 401 sigue en runRequest; cuando el resultado es
+  unauthenticated llama a un token inyectable `ON_UNAUTHENTICATED` definido en core, que la
+  raíz conecta con `session.expire()`, así core no importa nada de features.
+- **Guard y rehidratación:** espera la validación en curso antes de decidir; si el token ya no
+  sirve, limpia y va al login.
+- **Redirección:** ruta por defecto /accounts; returnUrl por query param y solo si es interno.
+- **Casos de test:** los míos más A–D, F y G, más varios de concurrencia e invalidez.
+
+### Ajustes posteriores (sin cambiar comportamiento salvo donde se indica)
+- El interceptor comparaba por `startsWith`, que dejaba pasar hosts parecidos
+  (`http://localhost:3000.evil.com`): lo cambié a comparar por origen (`new URL(...).origin`),
+  con tests de dominio parecido, otro puerto y otro protocolo.
+- Cablée la app real en app.config.ts (provideHttpClient con el interceptor, dataAccessProviders
+  y los providers de auth) y extraje `appProviders` a un arreglo exportado.
+- El test de integración usa `appProviders` reales y solo reemplaza el backend HTTP, así falla
+  si alguien saca el interceptor o el wiring de ON_UNAUTHENTICATED. Incluye: la request lleva el
+  header, un 401 fuera de login expira la sesión, y un 401 en el login no borra un token existente.
+- Reemplacé el inject repetido en cada adaptador por un servicio `ApiRequestRunner` que inyecta
+  el callback una vez (resolviéndolo de forma diferida para no crear una dependencia circular,
+  bug que destapó el test de integración).
+- Endurecí `safeReturnUrl`: en vez del chequeo de strings, resuelve el valor con `new URL` contra
+  una base inventada y lo acepta solo si el origen no cambia, cerrando los trucos con backslash y
+  caracteres de control (`/\evil.com`, `/<tab>/evil.com`) que el navegador normaliza a `//evil.com`.
+
+**Resultado:** puertos de auth, store de sesión, interceptor, guard, storage con respaldo, el
+gancho en runRequest, los providers en la raíz, el ApiRequestRunner y los tests (unitarios y de
+integración). Terminó en 206/206 verde, exit 0. No se hicieron pantallas ni navegación.
+
+**Decisión:** ✅ aceptado
+**Por qué:** Acepté la implementación porque separa bien el manejo de sesión del resto de la aplicación y contempla los casos de expiración y rehidratación. También me parecieron importantes los ajustes de seguridad del interceptor y del returnUrl.

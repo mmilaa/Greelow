@@ -10,7 +10,7 @@ import { mapTransfer, toCreateTransferBody, type TransferDto } from './transfer.
 import { mapTransaction, type TransactionDto } from '../../../shared/infrastructure/transaction.dto';
 import { type TransactionsPageDto } from '../../transactions/infrastructure/transactions-page.dto';
 import { API_BASE_URL } from '../../../core/config/api.config';
-import { runRequest } from '../../../core/http/http-adapter.util';
+import { ApiRequestRunner } from '../../../core/http/api-request-runner';
 import { ApiErrorException } from '../../../shared/domain/map-api-error';
 
 /** Page size used when fetching pending outgoing transfers. */
@@ -23,9 +23,10 @@ const MAX_PENDING_PAGES = 20;
 export class TransferHttpAdapter extends TransferPort {
   private readonly http = inject(HttpClient);
   private readonly baseUrl = inject(API_BASE_URL);
+  private readonly runner = inject(ApiRequestRunner);
 
   override create(input: CreateTransferInput): Promise<Transfer> {
-    return runRequest(
+    return this.runner.run(
       this.http.post<TransferDto>(`${this.baseUrl}/transfers`, toCreateTransferBody(input)),
       'create-transfer',
       (raw) => mapTransfer(raw),
@@ -33,7 +34,7 @@ export class TransferHttpAdapter extends TransferPort {
   }
 
   override getById(id: string): Promise<Transfer> {
-    return runRequest(
+    return this.runner.run(
       this.http.get<TransferDto>(`${this.baseUrl}/transfers/${id}`),
       'read',
       (raw) => mapTransfer(raw),
@@ -84,7 +85,7 @@ export class TransferHttpAdapter extends TransferPort {
       .set('page', String(page))
       .set('pageSize', String(PENDING_PAGE_SIZE));
 
-    return runRequest(
+    return this.runner.run(
       this.http.get<TransactionsPageDto>(`${this.baseUrl}/transactions`, { params }),
       'read',
       (raw) => {
