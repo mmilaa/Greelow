@@ -14,12 +14,16 @@ export type SessionState =
   | { status: 'loading' }
   | { status: 'authenticated'; user: AuthUser };
 
+/** Why the session ended, read by the redirect effect to choose the target. */
+export type SessionEndReason = 'expired' | 'logout';
+
 @Injectable({ providedIn: 'root' })
 export class SessionStore {
   private readonly auth = inject(AuthPort);
   private readonly tokens = inject(TokenStoragePort);
 
   private readonly state = signal<SessionState>({ status: 'anonymous' });
+  private readonly endReasonState = signal<SessionEndReason | null>(null);
 
   /** One-shot rehydration cache: the in-flight /auth/me promise, if any. */
   private rehydration: Promise<SessionState> | null = null;
@@ -27,6 +31,8 @@ export class SessionStore {
   private initialized = false;
 
   readonly session = this.state.asReadonly();
+  /** Reason the session last ended ('expired' | 'logout'), or null if never ended. */
+  readonly endReason = this.endReasonState.asReadonly();
   readonly user = computed(() => {
     const s = this.state();
     return s.status === 'authenticated' ? s.user : null;
@@ -40,6 +46,7 @@ export class SessionStore {
     try {
       const { token, user } = await this.auth.login(email, password);
       this.tokens.set(token);
+      this.endReasonState.set(null);
       this.state.set({ status: 'authenticated', user });
       this.initialized = true;
       return user;
@@ -50,19 +57,24 @@ export class SessionStore {
     }
   }
 
-  /** Clears the session. Idempotent: concurrent 401s expire it only once. */
-  expire(): void {
+  /**
+   * Clears the session. Idempotent: concurrent 401s expire it only once.
+   * `reason` records whether this was a token expiry (default) or a voluntary
+   * logout, so the redirect effect can choose the target.
+   */
+  expire(reason: SessionEndReason = 'expired'): void {
     this.tokens.clear();
     this.rehydration = null;
     this.initialized = false;
+    this.endReasonState.set(reason);
     if (this.state().status !== 'anonymous') {
       this.state.set({ status: 'anonymous' });
     }
   }
 
-  /** Explicit logout: same cleanup as expire. */
+  /** Explicit logout: same cleanup as expire, flagged as a voluntary logout. */
   logout(): void {
-    this.expire();
+    this.expire('logout');
   }
 
   /**

@@ -1,5 +1,6 @@
-import { Component, signal } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
+import { SessionRedirect } from './session-redirect';
 
 @Component({
   imports: [RouterOutlet],
@@ -8,5 +9,6 @@ import { RouterOutlet } from '@angular/router';
   templateUrl: './app.html',
 })
 export class App {
-  protected readonly title = signal('frontend');
+  // Eagerly instantiate the session-expiry redirect effect at app root.
+  private readonly sessionRedirect = inject(SessionRedirect);
 }

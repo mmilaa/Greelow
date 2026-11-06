@@ -51,3 +51,16 @@ export const authGuard: CanActivateFn = async (_route, state): Promise<boolean |
     returnUrl ? { queryParams: { returnUrl } } : {},
   );
 };
+
+/**
+ * Guards the /login route: if a (rehydrated) session is already active, there
+ * is no reason to show the login form, so redirect to /accounts.
+ */
+export const loginGuard: CanActivateFn = async (): Promise<boolean | UrlTree> => {
+  const session = inject(SessionStore);
+  const router = inject(Router);
+
+  await session.ensureInitialized();
+
+  return session.isAuthenticated() ? router.createUrlTree(['/accounts']) : true;
+};

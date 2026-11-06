@@ -1,0 +1,49 @@
+.shell-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.shell-brand {
+  font-weight: 600;
+}
+
+.shell-spacer {
+  flex: 1 1 auto;
+}
+
+.shell-nav {
+  display: flex;
+  gap: 0.25rem;
+}
+
+.shell-menu-button {
+  display: none;
+}
+
+.shell-user-name {
+  margin-left: 0.25rem;
+}
+
+.shell-link-active {
+  font-weight: 700;
+  text-decoration: underline;
+}
+
+.shell-content {
+  display: block;
+  padding: 1.5rem;
+}
+
+// Small screens: hide the inline nav, show the hamburger menu.
+@media (max-width: 599px) {
+  .shell-nav {
+    display: none;
+  }
+  .shell-menu-button {
+    display: inline-flex;
+  }
+  .shell-user-name {
+    display: none;
+  }
+}

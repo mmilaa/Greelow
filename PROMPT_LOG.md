@@ -373,3 +373,57 @@ integración). Terminó en 206/206 verde, exit 0. No se hicieron pantallas ni na
 
 **Decisión:** ✅ aceptado
 **Por qué:** Acepté la implementación porque separa bien el manejo de sesión del resto de la aplicación y contempla los casos de expiración y rehidratación. También me parecieron importantes los ajustes de seguridad del interceptor y del returnUrl.
+## #13 · Base de la UI: rutas, shell, login y redirección de sesión
+**Herramienta:** Kiro
+
+**Prompt:** (resumen) Pedí el diseño antes de escribir nada: las rutas (login pública y
+privadas con el guard, con páginas vacías para cuentas/movimientos/transferencias), el shell
+con Material, el login con sus tres tipos de error, dónde vive el efecto que redirige cuando
+expira la sesión, la redirección tras login, accesibilidad y cómo testear la UI sin tests
+frágiles. Con Material y Reactive Forms, sin TDD, sin las pantallas de datos.
+
+### Decisiones que tomé yo (elegí entre las alternativas que me propuso Kiro)
+- **Rutas:** lazy con loadComponent; shell eager; ruta ** a /accounts; placeholders con solo un h1.
+- **Shell responsive:** hamburguesa con mat-menu en pantallas chicas; logout en un mat-menu con
+  el nombre del usuario.
+- **Efecto de expiración:** en el App root, pero reaccionando a la TRANSICIÓN
+  authenticated -> anonymous (no a cualquier anonymous, que rompería un F5 con token válido
+  durante la rehidratación). Agregué al SessionStore un motivo 'expired' | 'logout': con
+  expiración navega a /login con la ruta actual completa como returnUrl; con logout va a /login
+  sin returnUrl. Idempotente y sin redirigir si ya está en /login. El shell y el servicio del
+  efecto van en app/, no en core/.
+- **Botón de login:** se deshabilita solo mientras se envía, no por form inválido, para que el
+  usuario vea qué falta. Error no-ApiErrorException -> mensaje genérico y rehabilita el botón.
+  autocomplete username / current-password.
+- **app.spec.ts del scaffold:** lo reescribí para verificar que App monta el router-outlet.
+- **Casos de test:** los míos más A–F y varios de reload/logout/returnUrl con ruta completa.
+
+### Lo que propuso Kiro y yo validé
+- El login no interpreta el kind del error: lo pasa al catálogo de shared/ui.
+- Testear comportamiento observable (navegación, mensajes del catálogo, botón) y no el DOM de
+  Material ni los estilos.
+
+**Resultado:** rutas, shell, login, placeholders, el efecto de redirección y los tests. El
+scaffold de app.html/app.ts quedó reducido al router-outlet. Material funciona con SCSS sin
+`@angular/animations`. 222/222 verde, ng build OK.
+
+**Decisión:** ✅ aceptado
+**Por qué:** Acepté la implementación porque la estructura de rutas y el shell quedaron como esperaba, y la lógica de redirección está separada de los componentes. También revisé el manejo de errores del login y los distintos casos de sesión para evitar redirecciones incorrectas.
+
+## #14 · Ajustes de la UI: integración de routing, guard de login y foco
+**Herramienta:** Kiro
+
+**Prompt:** (resumen) Tres cosas: un test de integración con el router real
+(RouterTestingHarness, rutas reales, fakes de puertos y storage) cubriendo sin sesión, token
+válido con una sola llamada a /auth/me, token inválido y logout navegando una sola vez; que si
+ya hay sesión y se entra a /login redirija a /accounts, con test; y foco inicial en el email con
+afterNextRender + focus() en vez de autofocus. Sin instalar dependencias.
+
+**Resultado:** agregué el spec de integración (4 casos con router real), un `loginGuard` que
+redirige a /accounts si ya hay sesión (con su ruta y test), y el foco inicial con
+afterNextRender + viewChild (saqué el autofocus). Confirmé que el shell no navega en el logout
+(solo lo hace el efecto), así que no había doble navegación que corregir. 227/227 verde, ng
+build OK. No instalé @angular/animations.
+
+**Decisión:** ✅ aceptado
+**Por qué:** Acepté los ajustes porque mejoran la navegación y la experiencia del login. Me pareció importante probar el routing real y verificar que no hubiera llamadas o redirecciones duplicadas. También se agregó el foco inicial en el campo de email.

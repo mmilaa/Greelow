@@ -1,0 +1,25 @@
+.login-wrapper {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding: 2rem 1rem;
+}
+
+.login-card {
+  width: 100%;
+  max-width: 400px;
+}
+
+.login-field {
+  width: 100%;
+}
+
+.login-submit {
+  width: 100%;
+  margin-top: 0.5rem;
+}
+
+.login-error {
+  color: var(--mat-sys-error, #b3261e);
+  margin: 0 0 1rem;
+}

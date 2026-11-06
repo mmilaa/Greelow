@@ -74,7 +74,12 @@ También separé el comportamiento de los errores 401 según la operación: en e
 
 Por último, agregué la validación del returnUrl para evitar redirecciones externas después del login.
 
-### 21. Tradeoffs / lo que no implementé y por qué
+### 21. Base de la UI (rutas, shell y login)
+Organicé las rutas privadas dentro de un shell con navegación, menú de usuario y logout. Las páginas se cargan lazy y los componentes solo muestran información y ejecutan acciones del store.
+
+Implementé el login con formularios reactivos y manejo de errores según el tipo. También separé la lógica de redirección del store para evitar dependencias con el Router y distinguir entre una sesión expirada y un logout voluntario.
+
+### 22. Tradeoffs / lo que no implementé y por qué
 1. No implementé la conversión de monedas en las transferencias entre monedas distintas: por ahora las bloqueo. La conversión quedaría como mejora futura.
 2. No implementé alta ni edición de cuentas: quedaría como mejora futura.
 3. El saldo disponible solo protege a quien usa esta app; el sobregiro provocado desde afuera o por condiciones de carrera no se puede evitar desde el cliente. La solución de fondo es del backend.
