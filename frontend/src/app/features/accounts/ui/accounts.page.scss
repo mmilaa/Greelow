@@ -1,0 +1,30 @@
+.accounts-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: var(--space-4);
+}
+
+.accounts-list__item {
+  margin: 0;
+}
+
+.accounts-notice {
+  margin: 0 0 var(--space-4);
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface-alt);
+  color: var(--color-text-soft);
+}
+
+// Outlined refresh button: a visible button shape around just the icon.
+.accounts-refresh {
+  min-width: 0;
+  padding: 0 var(--space-3);
+
+  .mat-icon {
+    margin: 0;
+  }
+}

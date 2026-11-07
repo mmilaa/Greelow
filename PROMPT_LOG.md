@@ -551,3 +551,51 @@ stores. El formato es-AR usa reloj de 12 horas (a. m./p. m.), no 24h.
 
 **Decisión:** ✅ aceptado
 **Por qué:** Acepté los cambios porque permiten que accounts use los datos y reglas compartidas sin depender de otra feature. También me pareció importante centralizar el cálculo del signo y el formato de fechas, y validar estas últimas de forma estricta desde que llegan de la API.
+## #18 · Lista de cuentas y crear cuenta
+**Herramienta:** Kiro
+
+**Prompt:** (resumen) Pedí el diseño antes de escribir: el store de cuentas con su máquina de
+estados, la tarjeta, el diálogo de crear cuenta, el botón en el encabezado, accesibilidad y
+cómo testear. El detalle quedó como placeholder. Luego varios ajustes de vista.
+
+### Decisiones que tomé yo (elegí entre las alternativas que me propuso Kiro)
+- **Store:** pendientes primero y cuentas después en secuencia (nunca Promise.all); si fallan
+  los pendientes o el tope, listo con solo el saldo contable y aviso; si falla la lista,
+  error; si availableBalance lanza por dato corrupto, esa fila se degrada a solo contable sin
+  romper la pantalla; refresh mantiene los datos con indicador y, si falla teniendo datos, los
+  conserva con aviso de desactualizado; contador de generación para que una respuesta vieja no
+  pise a la nueva.
+- **Dos correcciones al store que exigí:** el chequeo de generación va inmediatamente después
+  de cada await y ANTES de cualquier cambio de estado, incluidas las rutas de fallo (una carga
+  vieja que falla no puede pisar a una nueva que funcionó); y refreshing lo apaga solo la última
+  generación.
+- **Identificación de cuentas:** el id se muestra completo, atenuado, con la etiqueta "id de
+  cuenta" en una esquina de la tarjeta, fuera del enlace del nombre, con overflow-wrap anywhere.
+  Permití nombres repetidos (documentado en DECISIONS).
+- **Tarjeta clicable:** patrón de enlace extendido, el link envuelve solo el nombre y un ::after
+  hace clicable toda la tarjeta, para que el nombre accesible sea corto.
+- **Crear cuenta:** MatDialog, formulario reactivo con validator trimmedLength(2,100) sobre el
+  valor recortado (solo espacios no es válido) y moneda sin valor por defecto con aviso de que
+  no se puede cambiar. Errores con el catálogo, nunca el texto de la API. Si falla el create, el
+  diálogo queda abierto con el error.
+- **Botón "Nueva cuenta":** en el encabezado, nunca deshabilitado (un botón que se deshabilita
+  con el foco puesto lo pierde); el foco vuelve a él al cerrar el diálogo. Actualizar y el submit
+  usan la opción de Material para seguir enfocables estando deshabilitados (disabledInteractive,
+  verificado en el paquete instalado). Tras crear: snackbar anunciado; si la recarga falla,
+  mensaje específico.
+- **Estado vacío:** solo un mensaje que apunta al botón del encabezado, sin segundo botón que se
+  destruiría al crear la primera cuenta.
+
+### Ajustes de vista posteriores
+- En el diálogo, los campos nombre y moneda quedaban lado a lado: los apilé (nombre arriba,
+  moneda debajo) y separé un poco más para que el label "Nombre" no se corte.
+- Reemplacé el botón de texto "Actualizar" por un botón con el ícono refresh, pero con forma de
+  botón (contorno), con aria-label y tooltip.
+
+**Resultado:** store, tarjeta, diálogo, página de lista y request mapper, con /accounts/:id como
+placeholder. De 265 a 292 tests. ng build OK. Casos borde señalados sin cubrir: el retorno del
+foco del diálogo y disabledInteractive quedaron sin test automatizado (comportamiento de Material
+sobre overlay, frágil en unit), verificables a mano.
+
+**Decisión:** ✅ aceptado con modificaciones
+**Por qué:** Acepté la implementación porque el store contempla los distintos estados de carga y evita que una respuesta vieja sobrescriba datos más recientes. También revisé los detalles de la tarjeta y del diálogo para que la creación de cuentas sea clara y accesible, incluyendo cómo se muestran los errores y se recupera el foco al cerrar.

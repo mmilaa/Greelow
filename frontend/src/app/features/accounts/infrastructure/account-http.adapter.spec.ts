@@ -63,4 +63,30 @@ describe('AccountHttpAdapter', () => {
 
     await expect(promise).rejects.toMatchObject({ error: { kind: 'invalid-response' } });
   });
+
+  it('create posts name and currency and maps the created account', async () => {
+    const promise = port.create({ name: 'Cuenta Ahorro', currency: 'ARS' });
+    const req = httpMock.expectOne(`${BASE}/accounts`);
+    expect(req.request.method).toBe('POST');
+    expect(req.request.body).toEqual({ name: 'Cuenta Ahorro', currency: 'ARS' });
+    // docs/api-samples/25-account-create.json
+    req.flush({
+      account: { id: 'acc-new', userId: 'user-1', name: 'Cuenta Ahorro', currency: 'ARS', balance: 0 },
+    });
+
+    const created = await promise;
+    expect(created.id).toBe('acc-new');
+    expect(created.balance.toDecimal()).toBe(0);
+  });
+
+  it('create maps a 400 validation error from the catalogue path', async () => {
+    const promise = port.create({ name: 'a', currency: 'ARS' });
+    const req = httpMock.expectOne(`${BASE}/accounts`);
+    // docs/api-samples/26-error-400-account.txt
+    req.flush(
+      { errors: [{ field: 'name', message: 'name must be at least 2 characters' }] },
+      { status: 400, statusText: 'Bad Request' },
+    );
+    await expect(promise).rejects.toMatchObject({ error: { kind: 'validation' } });
+  });
 });

@@ -21,6 +21,12 @@ export const routes: Routes = [
           import('./features/accounts/ui/accounts.page').then((m) => m.AccountsPage),
       },
       {
+        path: 'accounts/:id',
+        title: 'Detalle de cuenta',
+        loadComponent: () =>
+          import('./features/accounts/ui/account-detail.page').then((m) => m.AccountDetailPage),
+      },
+      {
         path: 'transactions',
         title: 'Movimientos',
         loadComponent: () =>

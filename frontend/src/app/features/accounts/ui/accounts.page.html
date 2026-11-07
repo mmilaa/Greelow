@@ -1,0 +1,63 @@
+<app-page-header title="Cuentas">
+  <!-- "Nueva cuenta" never disables (disabling a focused button loses focus,
+       and focus returns here after the dialog closes). -->
+  <button mat-flat-button color="primary" type="button" (click)="openCreate()">
+    <mat-icon aria-hidden="true">add</mat-icon>
+    Nueva cuenta
+  </button>
+  @if (ready()) {
+    <button
+      mat-stroked-button
+      type="button"
+      aria-label="Actualizar"
+      matTooltip="Actualizar"
+      class="accounts-refresh"
+      (click)="refresh()"
+      [disabled]="refreshing()"
+      [disabledInteractive]="true"
+    >
+      <mat-icon>refresh</mat-icon>
+    </button>
+  }
+</app-page-header>
+
+@switch (state().status) {
+  @case ('loading') {
+    <app-state-panel state="loading" loadingText="Cargando tus cuentas…" />
+  }
+  @case ('error') {
+    <app-state-panel
+      state="error"
+      errorText="No pudimos cargar tus cuentas."
+      (retry)="retry()"
+    />
+  }
+  @case ('empty') {
+    <app-state-panel
+      state="empty"
+      emptyText="Todavía no tenés cuentas. Creá una con el botón Nueva cuenta."
+    />
+  }
+  @case ('ready') {
+    @if (ready(); as data) {
+      @if (!data.pendingAvailable) {
+        <p class="accounts-notice" role="status">
+          No pudimos calcular el saldo disponible. Mostramos el saldo contable.
+        </p>
+      }
+      @if (data.stale) {
+        <p class="accounts-notice" role="status">
+          Estos datos pueden estar desactualizados.
+          <button mat-button type="button" (click)="retry()">Reintentar</button>
+        </p>
+      }
+      <ul class="accounts-list">
+        @for (row of data.rows; track row.account.id) {
+          <li class="accounts-list__item">
+            <app-account-card [row]="row" />
+          </li>
+        }
+      </ul>
+    }
+  }
+}

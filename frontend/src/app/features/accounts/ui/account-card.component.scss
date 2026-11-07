@@ -1,0 +1,94 @@
+.card {
+  position: relative; // anchor for the stretched-link ::after overlay
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-4);
+  box-shadow: var(--shadow-card);
+}
+
+.card__header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+
+.card__name {
+  margin: 0;
+  font-size: 1.125rem;
+  font-weight: 600;
+}
+
+.card__link {
+  color: var(--color-text);
+  text-decoration: none;
+
+  // Stretched link: overlay covers the whole card so it is all clickable,
+  // while the link's accessible name is only the account name.
+  &::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: var(--radius-md);
+  }
+
+  &:hover,
+  &:focus-visible {
+    text-decoration: underline;
+  }
+}
+
+.card__currency {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--color-text-soft);
+}
+
+.card__balances {
+  margin: var(--space-3) 0 0;
+}
+
+.card__row {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-2);
+  margin-bottom: var(--space-1);
+}
+
+.card__label {
+  color: var(--color-text-soft);
+  margin: 0;
+}
+
+.card__value {
+  margin: 0;
+}
+
+.card__notice {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  margin: var(--space-1) 0 0;
+  font-size: 0.8125rem;
+  color: var(--color-warning);
+}
+
+.card__notice-icon {
+  font-size: 1rem;
+  width: 1rem;
+  height: 1rem;
+}
+
+.card__id {
+  margin: var(--space-3) 0 0;
+  font-size: 0.6875rem;
+  color: var(--color-text-soft);
+  overflow-wrap: anywhere;
+}
+
+.card__id-label {
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-right: var(--space-1);
+}

@@ -1,0 +1,48 @@
+<h2 mat-dialog-title>Nueva cuenta</h2>
+
+<mat-dialog-content>
+  <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
+    @if (serverError(); as message) {
+      <p class="dialog-error" role="alert">{{ message }}</p>
+    }
+
+    <mat-form-field appearance="outline" class="dialog-field" subscriptSizing="dynamic">
+      <mat-label>Nombre</mat-label>
+      <input matInput formControlName="name" maxlength="100" autocomplete="off" />
+      @if (form.controls.name.touched) {
+        @if (form.controls.name.hasError('required') || form.controls.name.hasError('trimmedMin')) {
+          <mat-error>El nombre debe tener entre 2 y 100 caracteres.</mat-error>
+        } @else if (form.controls.name.hasError('trimmedMax')) {
+          <mat-error>El nombre no puede superar los 100 caracteres.</mat-error>
+        }
+      }
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="dialog-field" subscriptSizing="dynamic">
+      <mat-label>Moneda</mat-label>
+      <mat-select formControlName="currency">
+        @for (c of currencies; track c) {
+          <mat-option [value]="c">{{ c }}</mat-option>
+        }
+      </mat-select>
+      <mat-hint>No se puede cambiar después.</mat-hint>
+      @if (form.controls.currency.touched && form.controls.currency.hasError('required')) {
+        <mat-error>Elegí una moneda.</mat-error>
+      }
+    </mat-form-field>
+  </form>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-button type="button" (click)="cancel()">Cancelar</button>
+  <button
+    mat-flat-button
+    color="primary"
+    type="button"
+    (click)="submit()"
+    [disabled]="submitting()"
+    [disabledInteractive]="true"
+  >
+    Crear
+  </button>
+</mat-dialog-actions>

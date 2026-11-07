@@ -33,3 +33,16 @@ export function mapAccount(dto: AccountDto): Account {
     createdAt: optionalString(dto.createdAt),
   };
 }
+
+// --- request mapper (domain -> API body) --------------------------------
+
+/** Body to create an account. */
+export interface CreateAccountBody {
+  name: string;
+  currency: string;
+}
+
+/** Maps a create-account command to the API request body. */
+export function toCreateAccountBody(input: { name: string; currency: string }): CreateAccountBody {
+  return { name: input.name, currency: input.currency };
+}

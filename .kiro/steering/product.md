@@ -53,6 +53,9 @@ Según el README, NO probado todavía (tratar con tolerancia):
 - Se pueden crear (nombre recortado de 2 a 100 caracteres y moneda). No se editan ni se
   borran. Nacen con saldo 0. La moneda no se puede cambiar, así que el formulario no tiene
   moneda por defecto y lo avisa.
+- Las cuentas se identifican por su id de la API, que se muestra completo como "ID de cuenta"
+(en una esquina de la tarjeta y debajo del nombre en el detalle) y donde se elige una cuenta.
+Los nombres pueden repetirse: lo que distingue una cuenta de otra es el id.
 
 ## Decisiones de producto (ya tomadas; se documentan en DECISIONS.md)
 1. Multi-moneda: BLOQUEAR transferencias entre monedas distintas, en dominio y en UI,

@@ -87,7 +87,10 @@ Creé los componentes compartidos que se van a reutilizar en las pantallas (mont
 ### 23. Fechas estrictas y signo del movimiento
 Centralicé en el dominio la lógica del signo de los movimientos y el formato de fechas para no repetirla en los componentes. También decidí validar las fechas de forma estricta: deben tener zona horaria y ser fechas reales, para evitar ambigüedades o que se acepten fechas inválidas.
 
-### 24. Tradeoffs / lo que no implementé y por qué
+### 24. Nombres de cuenta repetidos
+Permito nombres repetidos porque cada cuenta tiene un id que la identifica y que se muestra donde se elige una cuenta. No valido unicidad en el cliente: la lista local puede estar desactualizada y la validación daría una falsa garantía. El costo es que dos cuentas con el mismo nombre solo se distinguen por su id, que es largo.
+
+### 25. Tradeoffs / lo que no implementé y por qué
 1. No implementé la conversión de monedas en las transferencias entre monedas distintas: por ahora las bloqueo. La conversión quedaría como mejora futura.
-2. No implementé alta ni edición de cuentas: quedaría como mejora futura.
+2. No implementé edición de cuentas: la moneda es inmutable y el nombre no se puede editar por ahora; quedaría como mejora futura.
 3. El saldo disponible solo protege a quien usa esta app; el sobregiro provocado desde afuera o por condiciones de carrera no se puede evitar desde el cliente. La solución de fondo es del backend.
