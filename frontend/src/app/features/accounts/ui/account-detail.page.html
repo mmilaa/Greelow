@@ -42,10 +42,10 @@
           </a>
         </nav>
 
-        <section class="detail__movements" aria-labelledby="movements-heading">
-          <h2 id="movements-heading">Últimos movimientos</h2>
+        <section class="detail__transactions" aria-labelledby="transactions-heading">
+          <h2 id="transactions-heading">Últimos movimientos</h2>
 
-          @switch (movements().status) {
+          @switch (transactionsState().status) {
             @case ('loading') {
               <app-state-panel state="loading" loadingText="Cargando movimientos…" />
             }
@@ -53,19 +53,19 @@
               <app-state-panel
                 state="error"
                 errorText="No pudimos cargar los movimientos."
-                (retry)="retryMovements()"
+                (retry)="retryTransactions()"
               />
             }
             @case ('empty') {
               <app-state-panel state="empty" emptyText="Esta cuenta no tiene movimientos." />
             }
             @case ('ready') {
-              @if (movements(); as m) {
-                @if (m.status === 'ready') {
-                  <ul class="detail__movements-list">
-                    @for (mv of m.items; track mv.id) {
+              @if (transactionsState(); as t) {
+                @if (t.status === 'ready') {
+                  <ul class="detail__transactions-list">
+                    @for (tx of t.items; track tx.id) {
                       <li>
-                        <app-movement-row [movement]="mv" />
+                        <app-transaction-row [transaction]="tx" />
                       </li>
                     }
                   </ul>

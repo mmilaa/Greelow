@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { TestBed } from '@angular/core/testing';
 import { MatDialogRef } from '@angular/material/dialog';
 import { CreateAccountDialog } from './create-account.dialog';
-import { AccountsStore } from '../application/accounts.store';
+import { AccountsStore } from '../../../shared/application/accounts.store';
 import { ApiErrorException } from '../../../shared/domain/map-api-error';
 
 class FakeStore {

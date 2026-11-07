@@ -2,11 +2,11 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { TestBed } from '@angular/core/testing';
 import { AccountsStore } from './accounts.store';
 import { AccountPort, type CreateAccountInput } from './account.port';
-import { PendingTransfersPort } from '../../../shared/application/pending-transfers.port';
-import { type Account } from '../../../shared/domain/account';
-import { type AccountTransaction } from '../../../shared/domain/available-balance';
-import { Money } from '../../../shared/domain/money';
-import { type Currency } from '../../../shared/domain/currency';
+import { PendingTransfersPort } from './pending-transfers.port';
+import { type Account } from '../domain/account';
+import { type AccountTransaction } from '../domain/available-balance';
+import { Money } from '../domain/money';
+import { type Currency } from '../domain/currency';
 
 function account(id: string, balance: number, currency: Currency = 'ARS'): Account {
   return { id, name: `Cuenta ${id}`, currency, balance: Money.fromDecimal(balance, currency), createdAt: '2026-08-01T09:00:00Z' };

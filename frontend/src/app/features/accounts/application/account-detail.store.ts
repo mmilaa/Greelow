@@ -1,5 +1,5 @@
 import { Injectable, computed, inject, signal } from '@angular/core';
-import { AccountsStore, type AccountRow } from './accounts.store';
+import { AccountsStore, type AccountRow } from '../../../shared/application/accounts.store';
 import { TransactionPort } from '../../../shared/application/transaction.port';
 import { type Transaction } from '../../../shared/domain/transaction';
 
@@ -10,8 +10,8 @@ export type AccountView =
   | { kind: 'not-found' }
   | { kind: 'found'; row: AccountRow };
 
-/** State of the "latest movements" section (independent of the account). */
-export type MovementsState =
+/** State of the recent transactions section (independent of the account). */
+export type TransactionsState =
   | { status: 'loading' }
   | { status: 'error' }
   | { status: 'empty' }
@@ -22,8 +22,9 @@ const RECENT_PAGE_SIZE = 5;
 /**
  * Per-screen store for the account detail. Provided at the component level so it
  * resets between navigations. The account comes from the shared AccountsStore
- * (there is no getById); the movements are loaded here with a generation guard
- * so a slow response from a previous account never overwrites the current one.
+ * (there is no getById); the transactions are loaded here with a generation
+ * guard so a slow response from a previous account never overwrites the current
+ * one.
  */
 @Injectable()
 export class AccountDetailStore {
@@ -31,10 +32,10 @@ export class AccountDetailStore {
   private readonly transactions = inject(TransactionPort);
 
   private readonly accountId = signal<string | null>(null);
-  private readonly movementsSig = signal<MovementsState>({ status: 'loading' });
+  private readonly transactionsSig = signal<TransactionsState>({ status: 'loading' });
   private generation = 0;
 
-  readonly movements = this.movementsSig.asReadonly();
+  readonly transactionsState = this.transactionsSig.asReadonly();
 
   /** The account view: combines the shared list state with the current id. */
   readonly account = computed<AccountView>(() => {
@@ -58,30 +59,30 @@ export class AccountDetailStore {
   });
 
   /**
-   * Points the store at an account id. Resets the movements synchronously (so
-   * the previous account's movements are never shown under the new name), then
-   * loads this account's movements and refreshes the shared list.
+   * Points the store at an account id. Resets the transactions synchronously (so
+   * the previous account's transactions are never shown under the new name),
+   * then loads this account's transactions and refreshes the shared list.
    */
   setAccountId(id: string): void {
     this.accountId.set(id);
-    this.movementsSig.set({ status: 'loading' }); // synchronous reset
+    this.transactionsSig.set({ status: 'loading' }); // synchronous reset
     // If the list isn't loaded yet, load it once; if it is, refresh it so the
-    // balance stays fresh next to freshly fetched movements. Never both (that
+    // balance stays fresh next to freshly fetched transactions. Never both (that
     // would fire two loads).
     if (this.accountsStore.state().status === 'ready') {
       void this.accountsStore.refresh();
     } else {
       void this.accountsStore.ensureLoaded();
     }
-    void this.loadMovements(id);
+    void this.loadTransactions(id);
   }
 
-  /** Retries only the movements section (does not reload the account). */
-  retryMovements(): void {
+  /** Retries only the transactions section (does not reload the account). */
+  retryTransactions(): void {
     const id = this.accountId();
     if (id !== null) {
-      this.movementsSig.set({ status: 'loading' });
-      void this.loadMovements(id);
+      this.transactionsSig.set({ status: 'loading' });
+      void this.loadTransactions(id);
     }
   }
 
@@ -89,21 +90,19 @@ export class AccountDetailStore {
     void this.accountsStore.ensureLoaded();
   }
 
-  private async loadMovements(id: string): Promise<void> {
+  private async loadTransactions(id: string): Promise<void> {
     const gen = ++this.generation;
     let page: { items: Transaction[] };
     try {
       page = await this.transactions.list({ accountId: id, page: 1, pageSize: RECENT_PAGE_SIZE });
     } catch {
       if (gen !== this.generation) return; // a newer navigation started
-      this.movementsSig.set({ status: 'error' });
+      this.transactionsSig.set({ status: 'error' });
       return;
     }
     if (gen !== this.generation) return; // check before any state change
-    this.movementsSig.set(
-      page.items.length === 0
-        ? { status: 'empty' }
-        : { status: 'ready', items: page.items },
+    this.transactionsSig.set(
+      page.items.length === 0 ? { status: 'empty' } : { status: 'ready', items: page.items },
     );
   }
 }

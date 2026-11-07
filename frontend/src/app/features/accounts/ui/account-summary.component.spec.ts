@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { TestBed } from '@angular/core/testing';
 import { AccountSummaryComponent } from './account-summary.component';
-import { type AccountRow } from '../application/accounts.store';
+import { type AccountRow } from '../../../shared/application/accounts.store';
 import { type Account } from '../../../shared/domain/account';
 import { Money } from '../../../shared/domain/money';
 

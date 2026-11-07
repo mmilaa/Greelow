@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, input } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { AccountSummaryComponent } from './account-summary.component';
-import { type AccountRow } from '../application/accounts.store';
+import { type AccountRow } from '../../../shared/application/accounts.store';
 
 /**
  * A single account card for the list. Shows the name (as a stretched link) and

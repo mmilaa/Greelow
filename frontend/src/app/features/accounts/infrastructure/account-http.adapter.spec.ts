@@ -5,7 +5,7 @@ import {
   provideHttpClientTesting,
   HttpTestingController,
 } from '@angular/common/http/testing';
-import { AccountPort } from '../application/account.port';
+import { AccountPort } from '../../../shared/application/account.port';
 import { AccountHttpAdapter } from './account-http.adapter';
 import { API_BASE_URL } from '../../../core/config/api.config';
 import { ApiErrorException } from '../../../shared/domain/map-api-error';

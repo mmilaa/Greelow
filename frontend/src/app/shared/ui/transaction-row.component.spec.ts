@@ -1,8 +1,8 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { TestBed } from '@angular/core/testing';
-import { MovementRowComponent } from './movement-row.component';
-import { type Transaction } from '../../../shared/domain/transaction';
-import { Money } from '../../../shared/domain/money';
+import { TransactionRowComponent } from './transaction-row.component';
+import { type Transaction } from '../domain/transaction';
+import { Money } from '../domain/money';
 
 function txn(overrides: Partial<Transaction> = {}): Transaction {
   return {
@@ -22,13 +22,13 @@ function txn(overrides: Partial<Transaction> = {}): Transaction {
 }
 
 function render(t: Transaction) {
-  const fixture = TestBed.createComponent(MovementRowComponent);
-  fixture.componentRef.setInput('movement', t);
+  const fixture = TestBed.createComponent(TransactionRowComponent);
+  fixture.componentRef.setInput('transaction', t);
   fixture.detectChanges();
   return fixture;
 }
 
-describe('MovementRowComponent', () => {
+describe('TransactionRowComponent', () => {
   beforeEach(() => TestBed.resetTestingModule());
 
   it('shows the Spanish type label', () => {
@@ -68,7 +68,7 @@ describe('MovementRowComponent', () => {
   it('marks pending and failed as unsettled (dimmed) and still shows the chip', () => {
     const pending = render(txn({ status: 'pending' }));
     expect(pending.componentInstance.settled()).toBe(false);
-    expect((pending.nativeElement as HTMLElement).querySelector('.movement__amount--unsettled')).toBeTruthy();
+    expect((pending.nativeElement as HTMLElement).querySelector('.transaction__amount--unsettled')).toBeTruthy();
     expect((pending.nativeElement as HTMLElement).textContent).toContain('Procesando');
 
     const failed = render(txn({ status: 'failed' }));
@@ -79,6 +79,6 @@ describe('MovementRowComponent', () => {
   it('marks completed as settled (not dimmed)', () => {
     const fixture = render(txn({ status: 'completed' }));
     expect(fixture.componentInstance.settled()).toBe(true);
-    expect((fixture.nativeElement as HTMLElement).querySelector('.movement__amount--unsettled')).toBeNull();
+    expect((fixture.nativeElement as HTMLElement).querySelector('.transaction__amount--unsettled')).toBeNull();
   });
 });

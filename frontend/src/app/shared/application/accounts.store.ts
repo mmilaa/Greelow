@@ -1,12 +1,9 @@
 import { Injectable, computed, inject, signal } from '@angular/core';
 import { AccountPort, type CreateAccountInput } from './account.port';
-import { PendingTransfersPort } from '../../../shared/application/pending-transfers.port';
-import { type Account } from '../../../shared/domain/account';
-import { type Money } from '../../../shared/domain/money';
-import {
-  availableBalance,
-  type AccountTransaction,
-} from '../../../shared/domain/available-balance';
+import { PendingTransfersPort } from './pending-transfers.port';
+import { type Account } from '../domain/account';
+import { type Money } from '../domain/money';
+import { availableBalance, type AccountTransaction } from '../domain/available-balance';
 
 /** A row in the accounts list: the account plus its computed available balance. */
 export interface AccountRow {

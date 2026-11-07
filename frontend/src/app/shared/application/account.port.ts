@@ -1,5 +1,5 @@
-import { type Account } from '../../../shared/domain/account';
-import { type Currency } from '../../../shared/domain/currency';
+import { type Account } from '../domain/account';
+import { type Currency } from '../domain/currency';
 
 /**
  * Port for accounts. Abstract class so it doubles as a DI token.

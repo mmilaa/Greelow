@@ -645,3 +645,47 @@ helpers de etiquetas, botón volver, y tests (incluido el de integración que bl
 
 **Decisión:** ✅ aceptado
 **Por qué:** Acepté la implementación porque pude reutilizar la tarjeta de cuenta y mantener separados los estados de la cuenta y sus movimientos. También me pareció importante resolver el loop del effect con evidencia y dejar un test de integración que detecte si vuelven a dispararse llamadas de más.
+## #20 · Refactor previo a movimientos: puerto, store y fila de transacción a shared
+**Herramienta:** Kiro
+
+**Prompt:** (resumen) Antes de la pantalla de movimientos, pedí resolver un problema de
+arquitectura con refactors sin comportamiento nuevo: movimientos necesita la lista de cuentas
+(selector y nombre por fila), transfers la va a necesitar con el disponible, y la fila de
+transacción vivía en accounts/ui, pero las features no se importan entre sí. Luego un ajuste
+chico para renombrar también las descripciones de tests.
+
+### Lo que pedí (refactors puros, 336 tests que se mueven y no se pierden)
+- Mover `AccountPort` y `CreateAccountInput` a shared/application; el adaptador se queda en
+  accounts/infrastructure y la raíz lo conecta, como con TransactionPort.
+- Mover `AccountsStore` y `AccountRow` a shared/application, con sus specs y sin cambiar su
+  comportamiento (ensureLoaded, el contador de generación, inFlight). Las páginas, el diálogo y
+  el store del detalle de accounts importan de shared.
+- Mover la fila de transacción a shared/ui y renombrarla de `MovementRowComponent` a
+  `TransactionRowComponent` (selector app-transaction-row, input movement -> transaction, clases
+  CSS movement__* -> transaction__*). Imports y specs actualizados.
+- Renombrar los identificadores que quedaban con "movement" a "transaction" (en el store del
+  detalle: MovementsState -> TransactionsState, movements -> transactionsState, retryMovements ->
+  retryTransactions, loadMovements -> loadTransactions, y sus consumidores en la página de
+  detalle). Los textos de interfaz en español no cambian.
+- Sin dependencias nuevas, sin tocar transfer-policy ni los mappers, sin re-exports.
+
+### Decisiones que tomé yo
+- `AccountRow` se mueve junto con `AccountsStore` porque está declarado en el mismo archivo y es
+  su tipo de salida.
+- Renombré también las clases CSS `movement__*` / `detail__movements*` a `transaction__*` /
+  `detail__transactions*` para mantener coherencia de vocabulario, ya que el scss se movía igual.
+- `account-detail.store` se queda en accounts/ (solo se movieron el puerto, el store compartido y
+  la fila; el store del detalle solo cambió imports y los identificadores internos).
+- Segundo ajuste: renombré las descripciones (describe e it) de los specs que usaban "movement"
+  o "movements" como sustantivo a "transaction" / "transactions", para que buscar "movement" en
+  el código no devuelva nada salvo los textos de interfaz en español ("movimientos"). No cambié
+  ninguna aserción.
+
+**Resultado:** puerto, store y fila movidos a shared con sus specs; identificadores y
+descripciones de tests renombrados a transaction; imports actualizados en todos los consumidores
+(páginas, diálogo, componentes, adaptador, app.providers y tests de integración). Buscar
+"movement" en frontend/src ya no devuelve nada; solo quedan los textos de UI en español. 336
+tests (movidos, ninguno perdido), ng build OK. No se escribieron pantallas.
+
+**Decisión:** ✅ aceptado
+**Por qué:** Acepté el refactor porque permite que las distintas features compartan cuentas y transacciones sin depender unas de otras. También aproveché para unificar los nombres en el código y mantener la misma terminología en archivos, componentes, estilos y tests, sin cambiar el comportamiento existente.

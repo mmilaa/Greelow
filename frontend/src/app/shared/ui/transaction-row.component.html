@@ -1,0 +1,19 @@
+<div class="transaction">
+  <div class="transaction__main">
+    <span class="transaction__type">{{ typeLabel() }}</span>
+    @if (transaction().description) {
+      <span class="transaction__description">{{ transaction().description }}</span>
+    }
+    @if (categoryText(); as cat) {
+      <span class="transaction__category">{{ cat }}</span>
+    }
+    <time class="transaction__date" [attr.datetime]="transaction().createdAt">{{ dateText() }}</time>
+  </div>
+
+  <div class="transaction__side">
+    <span class="transaction__amount" [class.transaction__amount--unsettled]="!settled()">
+      <app-money-amount [amount]="signed()" />
+    </span>
+    <app-status-chip [status]="transaction().status" />
+  </div>
+</div>

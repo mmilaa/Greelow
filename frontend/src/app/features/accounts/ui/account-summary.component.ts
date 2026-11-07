@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, input } from '@angular/core';
 import { MatIconModule } from '@angular/material/icon';
 import { MoneyAmountComponent } from '../../../shared/ui/money-amount.component';
-import { type AccountRow } from '../application/accounts.store';
+import { type AccountRow } from '../../../shared/application/accounts.store';
 
 /**
  * Presentational summary of an account's money: currency code, ledger balance,

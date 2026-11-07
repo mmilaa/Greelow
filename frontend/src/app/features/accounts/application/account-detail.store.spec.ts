@@ -2,9 +2,9 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { AccountDetailStore } from './account-detail.store';
-import { AccountsStore, type AccountsState, type AccountRow } from './accounts.store';
+import { AccountsStore, type AccountsState, type AccountRow } from '../../../shared/application/accounts.store';
 import { TransactionPort, type TransactionQuery } from '../../../shared/application/transaction.port';
-import { AccountPort } from './account.port';
+import { AccountPort } from '../../../shared/application/account.port';
 import { PendingTransfersPort } from '../../../shared/application/pending-transfers.port';
 import { type Transaction } from '../../../shared/domain/transaction';
 import { type Account } from '../../../shared/domain/account';
@@ -104,63 +104,63 @@ describe('AccountDetailStore', () => {
     });
   });
 
-  describe('movements', () => {
+  describe('transactions', () => {
     it('requests page 1, pageSize 5 and the route accountId', async () => {
       const { store, transactions } = setup();
       transactions.listResult = [txn('t1')];
       store.setAccountId('acc-1');
-      await vi.waitFor(() => expect(store.movements().status).toBe('ready'));
+      await vi.waitFor(() => expect(store.transactionsState().status).toBe('ready'));
       expect(transactions.lastQuery).toEqual({ accountId: 'acc-1', page: 1, pageSize: 5 });
     });
 
-    it('shows the movements in the received order', async () => {
+    it('shows the transactions in the received order', async () => {
       const { store, transactions } = setup();
       transactions.listResult = [txn('t1'), txn('t2'), txn('t3')];
       store.setAccountId('acc-1');
-      await vi.waitFor(() => expect(store.movements().status).toBe('ready'));
-      const m = store.movements();
+      await vi.waitFor(() => expect(store.transactionsState().status).toBe('ready'));
+      const m = store.transactionsState();
       if (m.status !== 'ready') throw new Error('expected ready');
       expect(m.items.map((t) => t.id)).toEqual(['t1', 't2', 't3']);
     });
 
-    it('is empty when there are no movements', async () => {
+    it('is empty when there are no transactions', async () => {
       const { store, transactions } = setup();
       transactions.listResult = [];
       store.setAccountId('acc-1');
-      await vi.waitFor(() => expect(store.movements().status).toBe('empty'));
+      await vi.waitFor(() => expect(store.transactionsState().status).toBe('empty'));
     });
 
     it('is error when the list fails', async () => {
       const { store, transactions } = setup();
       transactions.listError = new Error('boom');
       store.setAccountId('acc-1');
-      await vi.waitFor(() => expect(store.movements().status).toBe('error'));
+      await vi.waitFor(() => expect(store.transactionsState().status).toBe('error'));
     });
 
-    it('retryMovements reloads only the section, not the account list', async () => {
+    it('retryTransactions reloads only the section, not the account list', async () => {
       const { store, transactions, accountsStore } = setup();
       transactions.listError = new Error('boom');
       store.setAccountId('acc-1');
-      await vi.waitFor(() => expect(store.movements().status).toBe('error'));
+      await vi.waitFor(() => expect(store.transactionsState().status).toBe('error'));
       accountsStore.ensureLoaded.mockClear();
 
       transactions.listError = null;
       transactions.listResult = [txn('t1')];
-      store.retryMovements();
-      await vi.waitFor(() => expect(store.movements().status).toBe('ready'));
+      store.retryTransactions();
+      await vi.waitFor(() => expect(store.transactionsState().status).toBe('ready'));
       expect(accountsStore.ensureLoaded).not.toHaveBeenCalled();
     });
   });
 
   describe('navigation between accounts (generation)', () => {
-    it('resets movements to loading synchronously when the id changes', async () => {
+    it('resets transactions to loading synchronously when the id changes', async () => {
       const { store, transactions } = setup();
       transactions.listResult = [txn('t1')];
       store.setAccountId('acc-1');
-      await vi.waitFor(() => expect(store.movements().status).toBe('ready'));
+      await vi.waitFor(() => expect(store.transactionsState().status).toBe('ready'));
 
       store.setAccountId('acc-2'); // synchronous reset
-      expect(store.movements().status).toBe('loading');
+      expect(store.transactionsState().status).toBe('loading');
     });
 
     it('a slow response from the previous account does not overwrite the new one', async () => {
@@ -176,11 +176,11 @@ describe('AccountDetailStore', () => {
       await vi.waitFor(() => expect(resolveSlow).toBeTypeOf('function'));
 
       store.setAccountId('acc-2');
-      await vi.waitFor(() => expect(store.movements().status).toBe('ready'));
+      await vi.waitFor(() => expect(store.transactionsState().status).toBe('ready'));
 
       // Now the slow acc-1 response arrives: must be discarded.
       resolveSlow({ items: [txn('old')] });
-      const m = store.movements();
+      const m = store.transactionsState();
       if (m.status !== 'ready') throw new Error('expected ready');
       expect(m.items[0].id).toBe('new');
     });

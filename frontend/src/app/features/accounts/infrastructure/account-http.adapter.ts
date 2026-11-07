@@ -1,6 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { AccountPort, type CreateAccountInput } from '../application/account.port';
+import { AccountPort, type CreateAccountInput } from '../../../shared/application/account.port';
 import { type Account } from '../../../shared/domain/account';
 import { mapAccount, toCreateAccountBody, type AccountDto } from './account.dto';
 import { API_BASE_URL } from '../../../core/config/api.config';

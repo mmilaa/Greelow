@@ -11,7 +11,7 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { MatButtonModule } from '@angular/material/button';
-import { AccountsStore } from '../application/accounts.store';
+import { AccountsStore } from '../../../shared/application/accounts.store';
 import { CURRENCIES, type Currency } from '../../../shared/domain/currency';
 import { ApiErrorException, type ApiError } from '../../../shared/domain/map-api-error';
 import { errorMessage } from '../../../shared/ui/error-messages';

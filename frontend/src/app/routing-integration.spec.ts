@@ -7,7 +7,7 @@ import { routes } from './app.routes';
 import { SessionRedirect } from './session-redirect';
 import { AuthPort, type AuthUser, type LoginResult } from './features/auth/application/auth.port';
 import { TokenStoragePort } from './features/auth/application/token-storage.port';
-import { AccountPort } from './features/accounts/application/account.port';
+import { AccountPort } from './shared/application/account.port';
 import { PendingTransfersPort } from './shared/application/pending-transfers.port';
 import { TransactionPort } from './shared/application/transaction.port';
 import { SessionStore } from './features/auth/application/session.store';

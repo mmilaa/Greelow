@@ -3,7 +3,7 @@ import { TestBed } from '@angular/core/testing';
 import { provideHttpClientTesting, HttpTestingController } from '@angular/common/http/testing';
 import { appProviders } from './app.config';
 import { API_BASE_URL } from './core/config/api.config';
-import { AccountPort } from './features/accounts/application/account.port';
+import { AccountPort } from './shared/application/account.port';
 import { AuthPort } from './features/auth/application/auth.port';
 import { SessionStore } from './features/auth/application/session.store';
 import { TokenStoragePort } from './features/auth/application/token-storage.port';

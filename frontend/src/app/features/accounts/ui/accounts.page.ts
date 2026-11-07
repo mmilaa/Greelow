@@ -4,7 +4,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatDialog } from '@angular/material/dialog';
 import { MatSnackBar } from '@angular/material/snack-bar';
-import { AccountsStore } from '../application/accounts.store';
+import { AccountsStore } from '../../../shared/application/accounts.store';
 import { AccountCardComponent } from './account-card.component';
 import { CreateAccountDialog, type CreateAccountResult } from './create-account.dialog';
 import { PageHeaderComponent } from '../../../shared/ui/page-header.component';

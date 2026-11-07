@@ -7,7 +7,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { AccountDetailStore } from '../application/account-detail.store';
 import { AccountSummaryComponent } from './account-summary.component';
-import { MovementRowComponent } from './movement-row.component';
+import { TransactionRowComponent } from '../../../shared/ui/transaction-row.component';
 import { StatePanelComponent } from '../../../shared/ui/state-panel.component';
 
 @Component({
@@ -19,7 +19,7 @@ import { StatePanelComponent } from '../../../shared/ui/state-panel.component';
     MatButtonModule,
     MatIconModule,
     AccountSummaryComponent,
-    MovementRowComponent,
+    TransactionRowComponent,
     StatePanelComponent,
   ],
   templateUrl: './account-detail.page.html',
@@ -37,7 +37,7 @@ export class AccountDetailPage {
   );
 
   readonly account = this.store.account;
-  readonly movements = this.store.movements;
+  readonly transactionsState = this.store.transactionsState;
 
   constructor() {
     // Point the store at the current id whenever it changes (also on first load).
@@ -66,7 +66,7 @@ export class AccountDetailPage {
     this.store.retryAccount();
   }
 
-  retryMovements(): void {
-    this.store.retryMovements();
+  retryTransactions(): void {
+    this.store.retryTransactions();
   }
 }

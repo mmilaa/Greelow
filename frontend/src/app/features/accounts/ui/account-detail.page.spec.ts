@@ -5,7 +5,7 @@ import { ActivatedRoute, provideRouter } from '@angular/router';
 import { Title } from '@angular/platform-browser';
 import { of } from 'rxjs';
 import { AccountDetailPage } from './account-detail.page';
-import { AccountsStore, type AccountsState, type AccountRow } from '../application/accounts.store';
+import { AccountsStore, type AccountsState, type AccountRow } from '../../../shared/application/accounts.store';
 import { TransactionPort } from '../../../shared/application/transaction.port';
 import { type Account } from '../../../shared/domain/account';
 import { type Transaction } from '../../../shared/domain/transaction';
