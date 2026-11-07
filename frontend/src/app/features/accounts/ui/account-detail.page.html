@@ -43,7 +43,18 @@
         </nav>
 
         <section class="detail__transactions" aria-labelledby="transactions-heading">
-          <h2 id="transactions-heading">Últimos movimientos</h2>
+          <header class="detail__transactions-header">
+            <h2 id="transactions-heading">Últimos movimientos</h2>
+            <a
+              mat-stroked-button
+              iconPositionEnd
+              [routerLink]="['/transactions']"
+              [queryParams]="{ account: view.row.account.id }"
+            >
+              Ver todos
+              <mat-icon aria-hidden="true">chevron_right</mat-icon>
+            </a>
+          </header>
 
           @switch (transactionsState().status) {
             @case ('loading') {

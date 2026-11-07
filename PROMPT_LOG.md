@@ -689,3 +689,88 @@ tests (movidos, ninguno perdido), ng build OK. No se escribieron pantallas.
 
 **Decisión:** ✅ aceptado
 **Por qué:** Acepté el refactor porque permite que las distintas features compartan cuentas y transacciones sin depender unas de otras. También aproveché para unificar los nombres en el código y mantener la misma terminología en archivos, componentes, estilos y tests, sin cambiar el comportamiento existente.
+## #21 · Pantalla de movimientos (solo lectura)
+**Herramienta:** Kiro
+
+**Prompt:** (resumen) Diseño e implementación de la pantalla de movimientos (/transactions), solo
+lectura: título, zona de filtros, listado y paginador; filtros en la URL; estados de carga,
+error, vacío (con y sin filtros) y listo; accesibilidad. El alta de ingreso/gasto y las
+transferencias quedan para después. Pedí leer antes el steering y los samples 27 a 34, y parar si
+el 31 (page fuera de rango) o el 29 (búsqueda) contradecían mis supuestos. Después, un botón "Ver
+todos" en el detalle, un ajuste del botón Actualizar y una discusión sobre filtros multi-opción.
+
+### Verificación de supuestos contra los samples (no contradecían, así que escribí)
+- 31 (`?page=99`, total 13): la API devuelve lista vacía con el total real y eco del page pedido.
+  Confirma: el cliente corrige yendo a la última página con replaceUrl; con total 0, vacío en
+  page 1.
+- 29 (búsqueda con otra capitalización): mismos resultados que el 28. Confirma búsqueda por
+  substring de description, case-insensitive del lado del servidor; el cliente solo recorta.
+- 27 combo de filtros, 30 vacío real, 32 pageSize>50 capado a 50, 33 type inválido -> 0, 34
+  page=0 -> page 1. Todos consistentes; igual en el cliente ignoro los inválidos antes de llamar.
+
+### Decisiones que tomé yo (elegí entre las alternativas que me propuso Kiro)
+- **Filtros en la URL como fuente de verdad**, con funciones puras de dominio
+  (`parseFilter`/`writeFilter`) en features/transactions/domain. La conversión de página entre el
+  paginador (base 0) y la API (base 1) va en shared/domain/page.ts (`toApiPage`/`toUiPageIndex`).
+- **Validación diferida:** account y category no se descartan como inválidos mientras su lista no
+  cargó (lista `null` = "todavía no sé"); recién cuando la lista está cargada y el valor no está,
+  se descarta con aviso. Un account en la URL antes de que cargue la lista dispara la consulta de
+  inmediato; si luego no existe, se descarta y se hace UNA consulta más sin él.
+- **Cuentas por ensureLoaded** del AccountsStore (sin refrescar en cada cambio de filtro); la
+  consulta de movimientos no espera a las cuentas. Si fallan, la pantalla funciona y la cuenta se
+  muestra por su ID.
+- **Categorías caídas:** la category de la URL igual se manda a la API, con el select
+  deshabilitado y un aviso; el resto de los filtros sigue funcionando.
+- **Dedup solo contra la última consulta EXITOSA** (sin relación con el historial); una que falló
+  se reintenta; Actualizar fuerza. Contador de generación chequeado tras cada await y antes de
+  tocar estado, también en los fallos. Mientras carga una consulta nueva no se ven filas de la
+  anterior.
+- **Debounce de búsqueda (300 ms) en el componente de filtros**, con tres cuidados: se cancela al
+  destruir el componente, la URL se arma con el filtro actual al emitir (escribir y cambiar otro
+  filtro dentro de la ventana conserva ambos), y el texto del buscador vuelve al de la URL con
+  "atrás". La búsqueda navega con replaceUrl (no agrega historial); los demás filtros navegan
+  normal, así "atrás" vuelve al filtro anterior.
+- **Página fuera de rango:** ir a la última con replaceUrl; total 0 -> vacío en page 1.
+- **Filas:** reuso TransactionRow; en "Todas las cuentas" cada fila muestra además el nombre de la
+  cuenta y su ID atenuado (un wrapper en la página, sin tocar la fila compartida); con una cuenta
+  elegida no se repite; si el accountId no está en la lista, solo el ID.
+- **Paginador:** mat-paginator con 10/25/50, total visible, textos en español vía un
+  MatPaginatorIntl provisto en la página.
+- **Accesibilidad:** labels en todos los controles, región aria-live que anuncia la cantidad
+  después de cada consulta (no por tecla), foco al primer control tras Limpiar filtros, título de
+  pestaña.
+
+### El botón "Ver todos" y el ajuste del Actualizar
+- Agregué en el detalle de cuenta un botón "Ver todos" al lado de "Últimos movimientos" que lleva
+  a /transactions?account=<id> (lo pedí primero como mat-button y después como botón con
+  contorno).
+- El botón Actualizar de los filtros (solo ícono) mostraba espacio al costado del ícono porque
+  mat-stroked-button reserva padding de texto; lo dejé cuadrado y centrado por CSS, manteniendo
+  el contorno.
+
+### Diagnósticos durante el trabajo (con evidencia, no suposición)
+- routing-integration rompió porque la página inyecta CategoryStore y faltaba el CategoryPort en
+  ese test; agregué el fake.
+- La página fuera de rango no corregía: una página vacía con total>0 iba al estado "empty", y la
+  corrección solo miraba "ready". Hice que "empty" lleve el eco de paginación y la corrección
+  cubra ambos.
+- acc-9999 hacía una sola consulta: los effects corren diferidos tras el primer CD y para entonces
+  ensureLoaded ya había resuelto. Disparé la primera consulta síncrona en el constructor con el
+  filtro de la URL tal cual; la segunda la dispara el effect cuando la lista invalida la cuenta.
+
+### Filtros multi-opción: lo discutimos y NO se hizo
+Pediste filtros de opción múltiple (varias cuentas, "ingresos y gastos sin transferencias", etc.).
+Expliqué que el endpoint filtra por un valor único por campo y devuelve la paginación ya filtrada
+por el servidor; el multi-valor obligaría a filtrar en el cliente (rompe el total) o a varias
+llamadas con merge (paginación aproximada). Decidiste dejar los filtros como están. Quedó
+registrado en DECISIONS #26.
+
+**Resultado:** dominio del filtro, store de movimientos con generación/dedup, store de categorías
+idempotente, página con URL<->filtro y corrección de fuera de rango e inválidos, componente de
+filtros con debounce, paginador en español, botón "Ver todos", ajuste del Actualizar. De 336 a
+399 tests (incluido un test de integración con router y stores reales que acota las consultas por
+caso), ng build OK. No se tocó lógica de negocio en los componentes ni se importó entre features;
+sin dependencias nuevas.
+
+**Decisión:** ✅ aceptado
+**Por qué:** Acepté la implementación porque los filtros quedan sincronizados con la URL y la paginación sigue dependiendo de la API, sin perder consistencia.

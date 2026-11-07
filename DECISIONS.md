@@ -93,7 +93,10 @@ Permito nombres repetidos porque cada cuenta tiene un id que la identifica y que
 ### 25. Detalle de cuenta: carga y estados
 Separé la carga de la cuenta y la de sus movimientos para que un error en estos últimos no oculte los datos de la cuenta. También cuidé que al entrar al detalle no se disparen cargas duplicadas.
 
-### 26. Tradeoffs / lo que no implementé y por qué
+### 26. Filtros de movimientos: selección única, sin multi-valor
+Dejé los filtros como selección única porque la API solo permite filtrar por un valor por campo y se encarga de la paginación. Permitir varios valores habría complicado el filtrado y podía hacer que el total y las páginas no fueran correctos. Preferí mantener la paginación confiable.
+
+### 27. Tradeoffs / lo que no implementé y por qué
 1. No implementé la conversión de monedas en las transferencias entre monedas distintas: por ahora las bloqueo. La conversión quedaría como mejora futura.
 2. No implementé edición de cuentas: la moneda es inmutable y el nombre no se puede editar por ahora; quedaría como mejora futura.
 3. El saldo disponible solo protege a quien usa esta app; el sobregiro provocado desde afuera o por condiciones de carrera no se puede evitar desde el cliente. La solución de fondo es del backend.

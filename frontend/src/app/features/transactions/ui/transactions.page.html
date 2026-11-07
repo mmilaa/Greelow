@@ -1,0 +1,88 @@
+<h1 class="transactions__title">Movimientos</h1>
+
+@if (ignored().length > 0) {
+  <p class="transactions__notice" role="status">
+    Ignoramos algunos filtros no válidos: {{ ignored().join(', ') }}.
+  </p>
+}
+
+<section #filtersRegion aria-label="Filtros">
+  <app-transactions-filters
+    [filter]="filter()"
+    [accounts]="accountOptions()"
+    [accountsLoading]="accountsLoading()"
+    [categories]="categories()"
+    [categoriesDisabled]="categoriesDisabled()"
+    [loading]="listState().status === 'loading'"
+    (filterChange)="onFilterChange($event)"
+    (searchChange)="onSearchChange($event)"
+    (clear)="onClear()"
+    (refresh)="onRefresh()"
+  />
+</section>
+
+<!-- Announces the result count after each query (not per keystroke). -->
+<p class="transactions__sr-only" role="status" aria-live="polite">
+  @if (resultCount() !== null) {
+    {{ resultCount() }} movimientos
+  }
+</p>
+
+<section class="transactions__list" aria-label="Movimientos">
+  @switch (listState().status) {
+    @case ('loading') {
+      <app-state-panel state="loading" loadingText="Cargando movimientos…" />
+    }
+    @case ('error') {
+      <app-state-panel
+        state="error"
+        errorText="No pudimos cargar los movimientos."
+        (retry)="retry()"
+      />
+    }
+    @case ('empty') {
+      @if (listState(); as s) {
+        @if (s.status === 'empty' && s.filtered) {
+          <div class="transactions__empty">
+            <p>Ningún movimiento coincide con los filtros.</p>
+            <button type="button" (click)="onClear()" class="transactions__empty-action">
+              Limpiar filtros
+            </button>
+          </div>
+        } @else {
+          <app-state-panel state="empty" emptyText="Todavía no hay movimientos." />
+        }
+      }
+    }
+    @case ('ready') {
+      @if (listState(); as s) {
+        @if (s.status === 'ready') {
+          <ul class="transactions__items">
+            @for (tx of s.items; track tx.id) {
+              <li class="transactions__item">
+                @if (accountLabel(tx.accountId); as acc) {
+                  <p class="transactions__account">
+                    @if (acc.name) {
+                      <span class="transactions__account-name">{{ acc.name }}</span>
+                    }
+                    <span class="transactions__account-id">{{ acc.id }}</span>
+                  </p>
+                }
+                <app-transaction-row [transaction]="tx" />
+              </li>
+            }
+          </ul>
+
+          <mat-paginator
+            [length]="s.total"
+            [pageSize]="s.pageSize"
+            [pageIndex]="pageIndex()"
+            [pageSizeOptions]="pageSizes"
+            showFirstLastButtons
+            (page)="onPage($event)"
+          />
+        }
+      }
+    }
+  }
+</section>

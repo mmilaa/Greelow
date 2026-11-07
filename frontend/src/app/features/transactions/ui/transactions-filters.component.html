@@ -1,0 +1,93 @@
+<form class="filters" (submit)="$event.preventDefault()">
+  <mat-form-field class="filters__field" appearance="outline">
+    <mat-label>Cuenta</mat-label>
+    <mat-select
+      #accountSelect
+      [value]="filter().account ?? ''"
+      (selectionChange)="onAccountChange($event.value)"
+      [disabled]="accountsLoading()"
+    >
+      @if (accountsLoading()) {
+        <mat-option value="" disabled>Cargando…</mat-option>
+      } @else {
+        <mat-option value="">Todas las cuentas</mat-option>
+        @for (acc of accounts(); track acc.id) {
+          <mat-option [value]="acc.id">{{ acc.name }} · {{ acc.currency }} · {{ acc.id }}</mat-option>
+        }
+      }
+    </mat-select>
+  </mat-form-field>
+
+  <mat-form-field class="filters__field" appearance="outline">
+    <mat-label>Tipo</mat-label>
+    <mat-select [value]="filter().type ?? ''" (selectionChange)="onTypeChange($event.value)">
+      <mat-option value="">Todos</mat-option>
+      <mat-option value="income">Ingreso</mat-option>
+      <mat-option value="expense">Gasto</mat-option>
+      <mat-option value="transfer">Transferencia</mat-option>
+    </mat-select>
+  </mat-form-field>
+
+  <mat-form-field class="filters__field" appearance="outline">
+    <mat-label>Estado</mat-label>
+    <mat-select [value]="filter().status ?? ''" (selectionChange)="onStatusChange($event.value)">
+      <mat-option value="">Todos</mat-option>
+      <mat-option value="completed">Completada</mat-option>
+      <mat-option value="pending">Pendiente</mat-option>
+      <mat-option value="failed">Fallida</mat-option>
+    </mat-select>
+  </mat-form-field>
+
+  <mat-form-field class="filters__field" appearance="outline">
+    <mat-label>Categoría</mat-label>
+    <mat-select
+      [value]="filter().category ?? ''"
+      (selectionChange)="onCategoryChange($event.value)"
+      [disabled]="categoriesDisabled()"
+    >
+      <mat-option value="">Todas</mat-option>
+      @for (cat of categories(); track cat) {
+        <mat-option [value]="cat">{{ categoryLabelOf(cat) }}</mat-option>
+      }
+    </mat-select>
+    @if (categoriesDisabled()) {
+      <mat-hint class="filters__hint">No pudimos cargar las categorías.</mat-hint>
+    }
+  </mat-form-field>
+
+  <mat-form-field class="filters__field filters__field--search" appearance="outline">
+    <mat-label>Buscar por descripción</mat-label>
+    <input
+      matInput
+      type="search"
+      [formControl]="searchControl"
+      (input)="onSearchInput(searchControl.value)"
+      autocomplete="off"
+    />
+    <mat-icon matSuffix aria-hidden="true">search</mat-icon>
+  </mat-form-field>
+
+  <div class="filters__actions">
+    <button
+      #clearButton
+      mat-stroked-button
+      type="button"
+      (click)="onClear()"
+    >
+      <mat-icon aria-hidden="true">filter_alt_off</mat-icon>
+      Limpiar filtros
+    </button>
+    <button
+      mat-stroked-button
+      type="button"
+      class="filters__refresh"
+      (click)="onRefresh()"
+      [disabled]="loading()"
+      [disabledInteractive]="true"
+      aria-label="Actualizar"
+      matTooltip="Actualizar"
+    >
+      <mat-icon aria-hidden="true">refresh</mat-icon>
+    </button>
+  </div>
+</form>

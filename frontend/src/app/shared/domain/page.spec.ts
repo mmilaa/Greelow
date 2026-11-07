@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { totalPages } from './page';
+import { totalPages, toApiPage, toUiPageIndex } from './page';
 
 describe('totalPages', () => {
   it('is 0 when total is 0', () => {
@@ -21,5 +21,22 @@ describe('totalPages', () => {
   it('is 0 when pageSize is 0 or negative (guard against division by zero)', () => {
     expect(totalPages(13, 0)).toBe(0);
     expect(totalPages(13, -5)).toBe(0);
+  });
+});
+
+describe('page number conversion (UI 0-based <-> API 1-based)', () => {
+  it('toApiPage adds one to the paginator index', () => {
+    expect(toApiPage(0)).toBe(1);
+    expect(toApiPage(4)).toBe(5);
+  });
+
+  it('toUiPageIndex subtracts one from the API page', () => {
+    expect(toUiPageIndex(1)).toBe(0);
+    expect(toUiPageIndex(5)).toBe(4);
+  });
+
+  it('round-trips', () => {
+    expect(toUiPageIndex(toApiPage(3))).toBe(3);
+    expect(toApiPage(toUiPageIndex(7))).toBe(7);
   });
 });

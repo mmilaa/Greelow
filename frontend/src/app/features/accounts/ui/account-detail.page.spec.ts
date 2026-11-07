@@ -90,6 +90,15 @@ describe('AccountDetailPage', () => {
     expect(link!.getAttribute('href')).toContain('from=acc-1');
   });
 
+  it('links "Ver todos" to the account\'s transactions', () => {
+    const { fixture } = setup(readyWith(row('acc-1', 'Cuenta Pesos')), 'acc-1');
+    const el = fixture.nativeElement as HTMLElement;
+    const link = el.querySelector('a[href*="/transactions"]') as HTMLAnchorElement | null;
+    expect(link).toBeTruthy();
+    expect(link!.textContent).toContain('Ver todos');
+    expect(link!.getAttribute('href')).toContain('account=acc-1');
+  });
+
   it('sets the tab title to the account name (case I)', async () => {
     const { title } = setup(readyWith(row('acc-1', 'Cuenta Pesos')), 'acc-1');
     await vi.waitFor(() => expect(title.getTitle()).toBe('Cuenta Pesos'));

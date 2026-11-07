@@ -1,0 +1,79 @@
+﻿{
+    "transactions":  [
+                         {
+                             "id":  "txn-10",
+                             "accountId":  "acc-1",
+                             "type":  "expense",
+                             "direction":  null,
+                             "amount":  15000,
+                             "currency":  "ARS",
+                             "category":  "health",
+                             "description":  "Farmacia",
+                             "status":  "completed",
+                             "counterpartAccountId":  null,
+                             "transferId":  null,
+                             "createdAt":  "2026-10-20T16:00:00Z"
+                         },
+                         {
+                             "id":  "txn-9",
+                             "accountId":  "acc-1",
+                             "type":  "expense",
+                             "direction":  null,
+                             "amount":  30000,
+                             "currency":  "ARS",
+                             "category":  "utilities",
+                             "description":  "Luz y gas",
+                             "status":  "completed",
+                             "counterpartAccountId":  null,
+                             "transferId":  null,
+                             "createdAt":  "2026-10-14T12:00:00Z"
+                         },
+                         {
+                             "id":  "txn-8",
+                             "accountId":  "acc-1",
+                             "type":  "expense",
+                             "direction":  null,
+                             "amount":  52000,
+                             "currency":  "ARS",
+                             "category":  "groceries",
+                             "description":  "Supermercado",
+                             "status":  "completed",
+                             "counterpartAccountId":  null,
+                             "transferId":  null,
+                             "createdAt":  "2026-10-11T18:00:00Z"
+                         },
+                         {
+                             "id":  "txn-7",
+                             "accountId":  "acc-1",
+                             "type":  "expense",
+                             "direction":  null,
+                             "amount":  320000,
+                             "currency":  "ARS",
+                             "category":  "rent",
+                             "description":  "Alquiler octubre",
+                             "status":  "completed",
+                             "counterpartAccountId":  null,
+                             "transferId":  null,
+                             "createdAt":  "2026-10-05T10:00:00Z"
+                         },
+                         {
+                             "id":  "txn-12",
+                             "accountId":  "acc-2",
+                             "type":  "expense",
+                             "direction":  null,
+                             "amount":  60,
+                             "currency":  "USD",
+                             "category":  "entertainment",
+                             "description":  "Suscripciones",
+                             "status":  "completed",
+                             "counterpartAccountId":  null,
+                             "transferId":  null,
+                             "createdAt":  "2026-10-02T09:00:00Z"
+                         }
+                     ],
+    "pagination":  {
+                       "page":  1,
+                       "pageSize":  5,
+                       "total":  9
+                   }
+}
