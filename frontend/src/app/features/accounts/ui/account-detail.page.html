@@ -1,0 +1,80 @@
+<p class="detail__nav">
+  <a mat-button routerLink="/accounts">
+    <mat-icon aria-hidden="true">arrow_back</mat-icon>
+    Volver a cuentas
+  </a>
+</p>
+
+@switch (account().kind) {
+  @case ('loading') {
+    <app-state-panel state="loading" loadingText="Cargando la cuenta…" />
+  }
+  @case ('error') {
+    <app-state-panel
+      state="error"
+      errorText="No pudimos cargar la cuenta."
+      (retry)="retryAccount()"
+    />
+  }
+  @case ('not-found') {
+    <app-state-panel state="error" errorText="Cuenta no encontrada." />
+  }
+  @case ('found') {
+    @if (account(); as view) {
+      @if (view.kind === 'found') {
+        <article class="detail__card">
+          <h1 class="detail__name">{{ view.row.account.name }}</h1>
+          <p class="detail__id">
+            <span class="detail__id-label">id de cuenta</span>
+            <span class="detail__id-value">{{ view.row.account.id }}</span>
+          </p>
+          <app-account-summary [row]="view.row" />
+        </article>
+
+        <nav class="detail__actions" aria-label="Acciones de la cuenta">
+          <a
+            mat-stroked-button
+            [routerLink]="transferLink()"
+            [queryParams]="{ from: view.row.account.id }"
+          >
+            <mat-icon aria-hidden="true">swap_horiz</mat-icon>
+            Transferir
+          </a>
+        </nav>
+
+        <section class="detail__movements" aria-labelledby="movements-heading">
+          <h2 id="movements-heading">Últimos movimientos</h2>
+
+          @switch (movements().status) {
+            @case ('loading') {
+              <app-state-panel state="loading" loadingText="Cargando movimientos…" />
+            }
+            @case ('error') {
+              <app-state-panel
+                state="error"
+                errorText="No pudimos cargar los movimientos."
+                (retry)="retryMovements()"
+              />
+            }
+            @case ('empty') {
+              <app-state-panel state="empty" emptyText="Esta cuenta no tiene movimientos." />
+            }
+            @case ('ready') {
+              @if (movements(); as m) {
+                @if (m.status === 'ready') {
+                  <ul class="detail__movements-list">
+                    @for (mv of m.items; track mv.id) {
+                      <li>
+                        <app-movement-row [movement]="mv" />
+                      </li>
+                    }
+                  </ul>
+                }
+              }
+            }
+          }
+        </section>
+      }
+    }
+  }
+}

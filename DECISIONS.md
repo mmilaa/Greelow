@@ -90,7 +90,10 @@ Centralicé en el dominio la lógica del signo de los movimientos y el formato d
 ### 24. Nombres de cuenta repetidos
 Permito nombres repetidos porque cada cuenta tiene un id que la identifica y que se muestra donde se elige una cuenta. No valido unicidad en el cliente: la lista local puede estar desactualizada y la validación daría una falsa garantía. El costo es que dos cuentas con el mismo nombre solo se distinguen por su id, que es largo.
 
-### 25. Tradeoffs / lo que no implementé y por qué
+### 25. Detalle de cuenta: carga y estados
+Separé la carga de la cuenta y la de sus movimientos para que un error en estos últimos no oculte los datos de la cuenta. También cuidé que al entrar al detalle no se disparen cargas duplicadas.
+
+### 26. Tradeoffs / lo que no implementé y por qué
 1. No implementé la conversión de monedas en las transferencias entre monedas distintas: por ahora las bloqueo. La conversión quedaría como mejora futura.
 2. No implementé edición de cuentas: la moneda es inmutable y el nombre no se puede editar por ahora; quedaría como mejora futura.
 3. El saldo disponible solo protege a quien usa esta app; el sobregiro provocado desde afuera o por condiciones de carrera no se puede evitar desde el cliente. La solución de fondo es del backend.

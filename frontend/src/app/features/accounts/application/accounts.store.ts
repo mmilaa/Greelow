@@ -56,9 +56,33 @@ export class AccountsStore {
     return this.stateSig().status === 'ready';
   }
 
+  /** In-flight load promise, used to make ensureLoaded idempotent. */
+  private inFlight: Promise<void> | null = null;
+
   /** First load (or retry from an error): shows the loading panel if there is no data. */
   load(): Promise<void> {
     return this.run(false);
+  }
+
+  /**
+   * Ensures the accounts list is loaded. Idempotent: if a load is in flight it
+   * returns the same promise (no second load); if the last load ended in error,
+   * it retries; if data is already present, it is a no-op.
+   */
+  ensureLoaded(): Promise<void> {
+    if (this.inFlight) {
+      return this.inFlight;
+    }
+    if (this.stateSig().status === 'ready') {
+      return Promise.resolve();
+    }
+    return this.load();
+  }
+
+  /** The row for an account id, or undefined if not present. */
+  rowById(id: string): AccountRow | undefined {
+    const s = this.stateSig();
+    return s.status === 'ready' ? s.rows.find((r) => r.account.id === id) : undefined;
   }
 
   /** Refresh: keeps the current data visible with an indicator. */
@@ -81,7 +105,17 @@ export class AccountsStore {
     return { refreshed };
   }
 
-  private async run(isRefresh: boolean): Promise<void> {
+  private run(isRefresh: boolean): Promise<void> {
+    const p = this.runInner(isRefresh).finally(() => {
+      if (this.inFlight === p) {
+        this.inFlight = null;
+      }
+    });
+    this.inFlight = p;
+    return p;
+  }
+
+  private async runInner(isRefresh: boolean): Promise<void> {
     const gen = ++this.generation;
 
     if (isRefresh && this.hasData()) {

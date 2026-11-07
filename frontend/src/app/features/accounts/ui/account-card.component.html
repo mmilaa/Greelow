@@ -5,30 +5,9 @@
         {{ row().account.name }}
       </a>
     </h2>
-    <span class="card__currency">{{ row().account.currency }}</span>
   </header>
 
-  <dl class="card__balances">
-    <div class="card__row">
-      <dt class="card__label">Saldo</dt>
-      <dd class="card__value">
-        <app-money-amount [amount]="row().account.balance" />
-      </dd>
-    </div>
-
-    @if (row().hasPending && row().available) {
-      <div class="card__row">
-        <dt class="card__label">Disponible</dt>
-        <dd class="card__value">
-          <app-money-amount [amount]="row().available!" />
-        </dd>
-      </div>
-      <p class="card__notice">
-        <mat-icon class="card__notice-icon" aria-hidden="true">hourglass_empty</mat-icon>
-        <span>Hay transferencias en proceso</span>
-      </p>
-    }
-  </dl>
+  <app-account-summary [row]="row()" />
 
   <p class="card__id">
     <span class="card__id-label">id de cuenta</span>

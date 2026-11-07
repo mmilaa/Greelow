@@ -21,8 +21,9 @@ export const routes: Routes = [
           import('./features/accounts/ui/accounts.page').then((m) => m.AccountsPage),
       },
       {
+        // No static title: the detail component sets the tab title to the
+        // account name (and "Cuenta" until it resolves).
         path: 'accounts/:id',
-        title: 'Detalle de cuenta',
         loadComponent: () =>
           import('./features/accounts/ui/account-detail.page').then((m) => m.AccountDetailPage),
       },

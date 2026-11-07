@@ -266,6 +266,71 @@ describe('AccountsStore', () => {
     });
   });
 
+  describe('ensureLoaded', () => {
+    it('two concurrent calls produce a single load', async () => {
+      const { store, accounts, pending } = setup();
+      accounts.listResult = [account('acc-1', 1000)];
+      await Promise.all([store.ensureLoaded(), store.ensureLoaded(), store.ensureLoaded()]);
+      expect(accounts.listCalls).toBe(1);
+      expect(pending).toBeDefined();
+    });
+
+    it('is a no-op once data is already loaded', async () => {
+      const { store, accounts } = setup();
+      accounts.listResult = [account('acc-1', 1000)];
+      await store.ensureLoaded();
+      await store.ensureLoaded();
+      expect(accounts.listCalls).toBe(1);
+    });
+
+    it('retries after an error', async () => {
+      const { store, accounts } = setup();
+      accounts.listError = new Error('boom');
+      await store.ensureLoaded();
+      expect(store.state().status).toBe('error');
+      accounts.listError = null;
+      accounts.listResult = [account('acc-1', 1000)];
+      await store.ensureLoaded();
+      expect(store.state().status).toBe('ready');
+    });
+
+    it('does not start an extra load when called during an in-flight refresh', async () => {
+      const { store, accounts } = setup();
+      accounts.listResult = [account('acc-1', 1000)];
+      await store.load();
+      expect(accounts.listCalls).toBe(1);
+
+      // Start a refresh (in flight) and call ensureLoaded before it resolves.
+      const refreshing = store.refresh();
+      await store.ensureLoaded(); // must join the in-flight refresh, not add a load
+      await refreshing;
+      expect(accounts.listCalls).toBe(2); // load + the single refresh, no extra
+    });
+
+    it('a stale load finishing later does not clear a newer in-flight promise', async () => {
+      const { store, accounts, pending } = setup();
+      // First load hangs on pending.
+      let resolveSlow!: (v: never[]) => void;
+      vi.spyOn(pending, 'pendingOutgoing').mockImplementationOnce(
+        () => new Promise((r) => (resolveSlow = r as (v: never[]) => void)),
+      );
+      accounts.listResult = [account('acc-old', 1)];
+      const first = store.ensureLoaded();
+      await vi.waitFor(() => expect(resolveSlow).toBeTypeOf('function'));
+
+      // A newer refresh starts and becomes the in-flight promise.
+      accounts.listResult = [account('acc-new', 2)];
+      const second = store.refresh();
+
+      // Old load resolves now; it must not null out the newer in-flight promise.
+      resolveSlow([]);
+      await Promise.all([first, second]);
+      const s = store.state();
+      if (s.status !== 'ready') throw new Error('expected ready');
+      expect(s.rows[0].account.id).toBe('acc-new');
+    });
+  });
+
   describe('create', () => {
     it('creates an account and reports a successful refresh', async () => {
       const { store, accounts } = setup();

@@ -1,0 +1,44 @@
+.movement {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-4);
+  padding: var(--space-3) 0;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.movement__main {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  min-width: 0;
+}
+
+.movement__type {
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.movement__description {
+  color: var(--color-text);
+  overflow-wrap: anywhere;
+}
+
+.movement__category,
+.movement__date {
+  font-size: 0.8125rem;
+  color: var(--color-text-soft);
+}
+
+.movement__side {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: var(--space-1);
+  white-space: nowrap;
+}
+
+// Pending/failed: dim with the soft text token (keeps AA contrast), not opacity.
+.movement__amount--unsettled app-money-amount .money {
+  color: var(--color-text-soft);
+}

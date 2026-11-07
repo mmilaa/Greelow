@@ -9,6 +9,7 @@ import { AuthPort, type AuthUser, type LoginResult } from './features/auth/appli
 import { TokenStoragePort } from './features/auth/application/token-storage.port';
 import { AccountPort } from './features/accounts/application/account.port';
 import { PendingTransfersPort } from './shared/application/pending-transfers.port';
+import { TransactionPort } from './shared/application/transaction.port';
 import { SessionStore } from './features/auth/application/session.store';
 import { ApiErrorException } from './shared/domain/map-api-error';
 
@@ -52,10 +53,11 @@ function setup(initialToken: string | null, configure?: (auth: FakeAuth) => void
       provideRouter(routes),
       { provide: AuthPort, useValue: auth },
       { provide: TokenStoragePort, useValue: storage },
-      // The accounts page mounts AccountsStore on navigation; give it fakes so
-      // the routing tests don't need the HTTP stack.
+      // The accounts pages mount AccountsStore / AccountDetailStore on
+      // navigation; give them fakes so the routing tests don't need the HTTP stack.
       { provide: AccountPort, useValue: { list: async () => [], create: async () => ({}) } },
       { provide: PendingTransfersPort, useValue: { pendingOutgoing: async () => [] } },
+      { provide: TransactionPort, useValue: { list: async () => ({ items: [], page: 1, pageSize: 5, total: 0, totalPages: 0 }), create: async () => ({}) } },
     ],
   });
   // Activate the expiry/logout redirect effect (normally hosted by App).
@@ -107,6 +109,8 @@ describe('routing (integration, real router + guards)', () => {
     await harness.navigateByUrl('/transfers');
     expect(title.getTitle()).toBe('Transferencias');
   });
+
+
 
   it('if already authenticated, visiting /login redirects to /accounts', async () => {
     const { router } = setup('tok-1');

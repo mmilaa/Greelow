@@ -30,6 +30,9 @@
 - Cambios acotados al alcance del prompt. No tocar lo ya cerrado sin pedirlo.
 - Cuando el prompt pide una propuesta, no escribir código hasta que yo elija.
 - Verificar con comandos (tests, build, búsquedas) y mostrar la salida, no a ojo.
+- Los tests se corren siempre con `ng test` (el builder carga el entorno de Angular). Nunca
+  `npx vitest` directo: falla con errores de compilación JIT que no son del código.
+- Un test que lleva un bucle a un crash no se elimina: se diagnostica.
 
 ## Dinero en la interfaz
 - Siempre con el código de moneda: ARS 1.234,56. El negativo lleva signo y no depende solo

@@ -1,0 +1,23 @@
+<p class="summary__currency">{{ row().account.currency }}</p>
+
+<dl class="summary__balances">
+  <div class="summary__row">
+    <dt class="summary__label">Saldo</dt>
+    <dd class="summary__value">
+      <app-money-amount [amount]="row().account.balance" />
+    </dd>
+  </div>
+
+  @if (row().hasPending && row().available) {
+    <div class="summary__row">
+      <dt class="summary__label">Disponible</dt>
+      <dd class="summary__value">
+        <app-money-amount [amount]="row().available!" />
+      </dd>
+    </div>
+    <p class="summary__notice">
+      <mat-icon class="summary__notice-icon" aria-hidden="true">hourglass_empty</mat-icon>
+      <span>Hay transferencias en proceso</span>
+    </p>
+  }
+</dl>

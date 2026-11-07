@@ -599,3 +599,49 @@ sobre overlay, frágil en unit), verificables a mano.
 
 **Decisión:** ✅ aceptado con modificaciones
 **Por qué:** Acepté la implementación porque el store contempla los distintos estados de carga y evita que una respuesta vieja sobrescriba datos más recientes. También revisé los detalles de la tarjeta y del diálogo para que la creación de cuentas sea clara y accesible, incluyendo cómo se muestran los errores y se recupera el foco al cerrar.
+## #19 · Detalle de cuenta
+**Herramienta:** Kiro
+
+**Prompt:** (resumen) Diseño e implementación del detalle de /accounts/:id: tarjeta de la cuenta,
+acción Transferir, últimos 5 movimientos, estados por sección, navegación entre cuentas sin
+pisar datos, título de pestaña dinámico. Luego varias rondas de corrección: un loop infinito al
+entrar al detalle, el diagnóstico real del error de TestBed, y el ajuste de los tests de
+integración.
+
+### Decisiones que tomé yo (elegí entre las alternativas que me propuso Kiro)
+- **Reuso de la tarjeta:** AccountSummaryComponent presentacional (moneda, saldo, disponible,
+  aviso); el id y el nombre los pone cada contenedor (lista: enlace; detalle: h1).
+- **Store del detalle:** provisto en el componente, con reset síncrono al cambiar el id; expone
+  un computed de la vista de la cuenta (cargando/error/no-encontrada/encontrada) combinando el
+  estado del AccountsStore con el id, para poder probarlo sin DOM.
+- **Carga al entrar:** una sola operación sobre la lista (si no hay datos, cargar; si los hay,
+  refrescar), nunca las dos. Test: una navegación hace un pedido de pendientes y uno de cuentas;
+  al cambiar de cuenta, exactamente dos de cada uno (carga inicial + refresco), para que una
+  carga doble no pase.
+- **Catálogo:** transactionTypeLabel(type, direction) y categoryLabel en shared/ui con switch
+  exhaustivo; una categoría desconocida se muestra cruda con la primera letra en mayúscula; en
+  las transferencias la categoría "transfer" no se repite.
+- **Movimientos pending/failed:** atenuados con el token de texto suave (no opacity, que bajaría
+  el contraste), con el chip de estado.
+- **Título de pestaña:** solo el nombre de la cuenta (y "Cuenta" hasta que resuelve); la ruta no
+  lleva title estático.
+- **Botón volver:** un botón "Volver a cuentas" siempre visible en el detalle.
+
+### El loop infinito (diagnóstico con evidencia, no suposición)
+- En una primera vuelta atribuí un crash de tests a un ciclo de imports sin comprobarlo; me
+  hiciste diagnosticarlo. madge confirmó que NO había ciclo. Eran DOS problemas distintos: un
+  artefacto de correr vitest directo (sin el compilador de Angular, que ng test sí carga) y un
+  loop infinito real.
+- La causa del loop: un effect que reaccionaba al id de la ruta llamaba setAccountId, que lee y
+  escribe las señales del store (refresh/ensureLoaded); el effect quedaba suscrito a esas señales
+  y se re-ejecutaba sin fin (peticiones infinitas en el navegador, memoria agotada en los tests).
+  Lo arreglé envolviendo la llamada en untracked, para que el effect dependa solo del id.
+- Pedí que un loop falle rápido: el test de integración usa fakes que cuentan llamadas y lanzan
+  si se superan, con los stores reales y el router real.
+
+**Resultado:** store del detalle, resumen reusable, fila de movimiento, página con sus estados,
+helpers de etiquetas, botón volver, y tests (incluido el de integración que blinda el loop).
+336 tests, ng build OK. Correr siempre con ng test, nunca vitest directo.
+
+**Decisión:** ✅ aceptado
+**Por qué:** Acepté la implementación porque pude reutilizar la tarjeta de cuenta y mantener separados los estados de la cuenta y sus movimientos. También me pareció importante resolver el loop del effect con evidencia y dejar un test de integración que detecte si vuelven a dispararse llamadas de más.
