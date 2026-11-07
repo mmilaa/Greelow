@@ -513,3 +513,41 @@ se movieron). No se escribió la pantalla.
 
 **Decisión:** ✅ aceptado
 **Por qué:** Acepté el refactor porque permite que accounts y transfers compartan la lógica sin depender una de otra. También me pareció bien centralizar la consulta de pendientes y mantener toda la paginación en el adaptador. Revisé que se conservaran los tests y que los cambios no modificaran el comportamiento de las transferencias.
+## #17 · Preparación de la pantalla de cuentas: puerto compartido, reglas de dominio y fechas estrictas
+**Herramienta:** Kiro
+
+**Prompt:** (resumen) Diseño de la pantalla de cuentas (lista, crear, detalle) pero pidiendo
+hacer SOLO la preparación, sin pantallas ni stores: mover TransactionPort a shared, agregar
+reglas de dominio (signo del movimiento y formato de fecha) y validar el createdAt en el
+mapper. Luego dos rondas de endurecimiento de la validación de fechas.
+
+### Decisiones que tomé yo (elegí entre las alternativas que me propuso Kiro)
+- **Arquitectura:** TransactionPort, TransactionQuery y CreateTransactionInput van a
+  shared/application (accounts necesita listar movimientos y no puede importar de transactions).
+  El adaptador se queda en transactions/infrastructure importando el puerto de shared; CategoryPort
+  queda en la feature. Sin re-exports. La raíz lo conecta.
+- **mapApiError:** agregué 'create-account' al contexto; 400 con errors[] es validation, 400 con
+  { error } y 422 son unknown (sin regla propia, como los demás contextos).
+- **Signo del movimiento:** shared/domain/signed-amount.ts, income o direction in suma, expense o
+  direction out resta, vía Money.zero().minus() sin agregar métodos a Money, sin depender del estado.
+- **Formato de fecha:** shared/domain/format-date.ts, es-AR con dateStyle medium y timeStyle short,
+  zona local por defecto; los tests pasan la zona explícita y normalizan los espacios.
+- **Validación de createdAt en el mapper:** rechaza fechas inválidas con InvalidDataError (única
+  modificación permitida a los mappers).
+- **Fechas estrictas (segunda y tercera ronda):** una fecha válida es ISO 8601 con zona obligatoria
+  y una fecha de calendario real validada por componentes (no por Date, que acepta el 30 de febrero
+  y lo corre a marzo, y que interpreta un string sin zona en el huso local). Una sola definición
+  compartida en shared/domain/iso-date.ts, de la que dependen parse.ts y format-date.ts (no entre
+  sí). Corregí también unas aserciones de hora que daban falsos positivos (2:00 matcheaba 12:00).
+
+### Lo que propuso Kiro y yo validé
+- Que signedAmount y formatDateTime no existían y había que crearlas en el dominio.
+- El caso de zona horaria que cambia el día (02:00Z es 4 nov 23:00 en Buenos Aires).
+
+**Resultado:** TransactionPort movido a shared (tests conservados), signedAmount y formatDateTime
+con tests, validación estricta de fechas por componentes con su módulo propio, y el mapper
+rechazando createdAt inválido. Terminó en 265 tests, ng build OK. No se escribieron pantallas ni
+stores. El formato es-AR usa reloj de 12 horas (a. m./p. m.), no 24h.
+
+**Decisión:** ✅ aceptado
+**Por qué:** Acepté los cambios porque permiten que accounts use los datos y reglas compartidas sin depender de otra feature. También me pareció importante centralizar el cálculo del signo y el formato de fechas, y validar estas últimas de forma estricta desde que llegan de la API.

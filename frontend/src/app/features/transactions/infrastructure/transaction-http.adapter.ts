@@ -2,10 +2,10 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import {
   TransactionPort,
-  CategoryPort,
   type TransactionQuery,
   type CreateTransactionInput,
-} from '../application/transaction.port';
+} from '../../../shared/application/transaction.port';
+import { CategoryPort } from '../application/category.port';
 import { type Transaction } from '../../../shared/domain/transaction';
 import { type Page } from '../../../shared/domain/page';
 import { type TransactionDto } from '../../../shared/infrastructure/transaction.dto';

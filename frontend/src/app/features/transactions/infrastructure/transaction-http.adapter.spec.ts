@@ -5,7 +5,8 @@ import {
   provideHttpClientTesting,
   HttpTestingController,
 } from '@angular/common/http/testing';
-import { TransactionPort, CategoryPort } from '../application/transaction.port';
+import { TransactionPort } from '../../../shared/application/transaction.port';
+import { CategoryPort } from '../application/category.port';
 import { TransactionHttpAdapter, CategoryHttpAdapter } from './transaction-http.adapter';
 import { API_BASE_URL } from '../../../core/config/api.config';
 import { Money } from '../../../shared/domain/money';

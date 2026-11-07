@@ -110,6 +110,17 @@ describe('mapTransaction', () => {
     it('throws when id is missing', () => {
       expect(() => mapTransaction(expenseDto({ id: undefined }))).toThrow(InvalidDataError);
     });
+
+    it('throws when createdAt is not a valid date', () => {
+      expect(() => mapTransaction(expenseDto({ createdAt: 'not-a-date' }))).toThrow(InvalidDataError);
+      expect(() => mapTransaction(expenseDto({ createdAt: undefined }))).toThrow(InvalidDataError);
+    });
+
+    it('throws when createdAt has no time zone (ambiguous local time)', () => {
+      expect(() => mapTransaction(expenseDto({ createdAt: '2026-11-05T02:00:00' }))).toThrow(
+        InvalidDataError,
+      );
+    });
   });
 
   describe('direction / type coherence', () => {

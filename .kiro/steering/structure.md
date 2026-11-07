@@ -6,6 +6,8 @@ Por features, con capas y dependencias hacia adentro:
 frontend/src/app/
    core/            auth, interceptors, guards, config, mapeo central de errores
    shared/
+      shared/application/   puertos compartidos entre features(PendingTransfersPort)
+   core/data/            adaptadores HTTP que implementan puertos de shared (usan ApiRequestRunner y API_BASE_URL). core puede importar de shared, nunca de features
     domain/      Money, Currency y errores comunes. TS puro (sin @angular/*)
     ui/          UI genérica y el pipe de formato de dinero (usa formatMoney de shared/domain)
    features/<feature>/

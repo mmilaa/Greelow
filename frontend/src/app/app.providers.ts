@@ -1,7 +1,8 @@
 import { type Provider } from '@angular/core';
 import { AccountPort } from './features/accounts/application/account.port';
 import { AccountHttpAdapter } from './features/accounts/infrastructure/account-http.adapter';
-import { TransactionPort, CategoryPort } from './features/transactions/application/transaction.port';
+import { TransactionPort } from './shared/application/transaction.port';
+import { CategoryPort } from './features/transactions/application/category.port';
 import {
   TransactionHttpAdapter,
   CategoryHttpAdapter,

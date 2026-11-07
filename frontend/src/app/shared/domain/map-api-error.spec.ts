@@ -101,6 +101,36 @@ describe('mapApiError', () => {
     });
   });
 
+  describe('create-account context', () => {
+    it('maps a 400 with field errors to validation', () => {
+      // docs/api-samples/26-error-400-account.txt
+      const body = {
+        errors: [
+          { field: 'name', message: 'name must be at least 2 characters' },
+          { field: 'currency', message: 'currency must be one of: ARS, USD, EUR' },
+        ],
+      };
+      expect(mapApiError(response(400, body), 'create-account')).toEqual({
+        kind: 'validation',
+        fields: body.errors,
+      });
+    });
+
+    it('maps a 400 { error } to unknown(400) (no same-account rule outside transfers)', () => {
+      expect(mapApiError(response(400, { error: 'x' }), 'create-account')).toEqual({
+        kind: 'unknown',
+        status: 400,
+      });
+    });
+
+    it('maps a 422 to unknown(422) (insufficient-funds is only for transfers)', () => {
+      expect(mapApiError(response(422, { error: 'x' }), 'create-account')).toEqual({
+        kind: 'unknown',
+        status: 422,
+      });
+    });
+  });
+
   describe('422 (insufficient funds, only for transfers) (case I)', () => {
     it('maps a 422 in create-transfer to insufficient-funds', () => {
       // docs/api-samples/08-error-422.txt

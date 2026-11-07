@@ -1,10 +1,11 @@
-import { type Transaction, type TransactionType, type TransactionStatus } from '../../../shared/domain/transaction';
-import { type Page } from '../../../shared/domain/page';
-import { type Money } from '../../../shared/domain/money';
+import { type Transaction, type TransactionType, type TransactionStatus } from '../domain/transaction';
+import { type Page } from '../domain/page';
+import { type Money } from '../domain/money';
 
 /**
- * Ports for transactions and categories. Abstract classes so they double as DI
- * tokens. CategoryPort lives here (no separate categories feature).
+ * Port for transactions. Abstract class so it doubles as a DI token. Lives in
+ * shared/application because more than one feature needs it (transactions lists
+ * and creates; accounts reads an account's recent transactions).
  *
  * Pure TypeScript: no `@angular/*` imports.
  */
@@ -32,8 +33,4 @@ export interface CreateTransactionInput {
 export abstract class TransactionPort {
   abstract list(query: TransactionQuery): Promise<Page<Transaction>>;
   abstract create(input: CreateTransactionInput): Promise<Transaction>;
-}
-
-export abstract class CategoryPort {
-  abstract list(): Promise<string[]>;
 }

@@ -8,7 +8,12 @@
  */
 
 /** Context of the operation that triggered the request. */
-export type ApiOperation = 'login' | 'create-transfer' | 'create-transaction' | 'read';
+export type ApiOperation =
+  | 'login'
+  | 'create-transfer'
+  | 'create-transaction'
+  | 'create-account'
+  | 'read';
 
 /** API response stripped of any Angular type (e.g. HttpErrorResponse). */
 export interface ApiErrorResponse {

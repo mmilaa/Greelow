@@ -1,5 +1,6 @@
 import { InvalidDataError } from './errors';
 import { type Currency, isCurrency } from './currency';
+import { isValidIsoDateTime } from './iso-date';
 
 /**
  * Small parsing helpers shared by the infrastructure mappers. They throw
@@ -54,6 +55,17 @@ export function nullableString(value: unknown, field: string): string | null {
   }
   if (typeof value !== 'string') {
     throw new InvalidDataError(`Expected a string or null for "${field}"`);
+  }
+  return value;
+}
+
+/**
+ * A required strict ISO 8601 date-time (with Z or offset). Shares the single
+ * "valid date" definition with formatDateTime. Throws InvalidDataError otherwise.
+ */
+export function requireDateString(value: unknown, field: string): string {
+  if (!isValidIsoDateTime(value)) {
+    throw new InvalidDataError(`Expected a valid ISO date for "${field}", got ${String(value)}`);
   }
   return value;
 }

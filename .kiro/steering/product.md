@@ -23,8 +23,10 @@ Verificado probando la API:
   usuario. GET /transfers/:id devuelve ese lado en `null`.
 - Transferir a la misma cuenta devuelve 400 con `{ error: "Cannot transfer to the same account" }`.
 - Transferir a una cuenta inexistente devuelve 404 con `{ error: "Destination account not found" }`.
-- GET /accounts/:id de una cuenta ajena devuelve 404: la moneda de un destino de otro
-  usuario es desconocida antes de enviar.
+- GET /accounts/:id de una cuenta ajena devuelve 404: la moneda de un destino de otro usuario es desconocida antes de enviar.
+- Fechas: createdAt llega en ISO UTC y se muestra en hora local con formato es-AR "4 nov 2026, 11:00 p. m.". Los tests de fecha pasan la zona horaria explícita.
+- Los movimientos pending o failed se muestran con el monto atenuado y el chip de estado,  nunca como si fueran dinero movido.
+- createdAt debe ser ISO 8601 con Z u offset. Un string sin zona se rechaza (InvalidDataError), porque se interpretaría en la zona local del navegador y correría las horas.
 
 Según el README, NO probado todavía (tratar con tolerancia):
 - status puede ser `failed` (el filtro lo acepta; el seed no lo genera).

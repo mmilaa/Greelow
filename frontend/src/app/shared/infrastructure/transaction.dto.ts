@@ -11,6 +11,7 @@ import {
   requireNumber,
   requireCurrency,
   requireOneOf,
+  requireDateString,
   optionalString,
   nullableString,
 } from '../domain/parse';
@@ -80,6 +81,6 @@ export function mapTransaction(dto: TransactionDto): Transaction {
     description: optionalString(dto.description),
     counterpartAccountId: nullableString(dto.counterpartAccountId, 'counterpartAccountId'),
     transferId: nullableString(dto.transferId, 'transferId'),
-    createdAt: optionalString(dto.createdAt),
+    createdAt: requireDateString(dto.createdAt, 'createdAt'),
   };
 }
