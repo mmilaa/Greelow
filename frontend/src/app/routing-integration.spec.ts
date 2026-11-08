@@ -12,6 +12,7 @@ import { PendingTransfersPort } from './shared/application/pending-transfers.por
 import { TransactionPort } from './shared/application/transaction.port';
 import { CategoryPort } from './features/transactions/application/category.port';
 import { NewTransactionLauncher } from './shared/ui/new-transaction-launcher';
+import { TransferPort } from './features/transfers/application/transfer.port';
 import { SessionStore } from './features/auth/application/session.store';
 import { ApiErrorException } from './shared/domain/map-api-error';
 
@@ -62,6 +63,9 @@ function setup(initialToken: string | null, configure?: (auth: FakeAuth) => void
       { provide: TransactionPort, useValue: { list: async () => ({ items: [], page: 1, pageSize: 5, total: 0, totalPages: 0 }), create: async () => ({}) } },
       { provide: CategoryPort, useValue: { list: async () => [] } },
       { provide: NewTransactionLauncher, useValue: { open: async () => ({ created: false }) } },
+      // The transfers page provides TransferStore/TransferTracker, which inject
+      // the TransferPort; give it a fake so routing to /transfers mounts cleanly.
+      { provide: TransferPort, useValue: { create: async () => ({}), getById: async () => ({}) } },
     ],
   });
   // Activate the expiry/logout redirect effect (normally hosted by App).
@@ -111,7 +115,7 @@ describe('routing (integration, real router + guards)', () => {
     await harness.navigateByUrl('/transactions');
     expect(title.getTitle()).toBe('Movimientos');
     await harness.navigateByUrl('/transfers');
-    expect(title.getTitle()).toBe('Transferencias');
+    expect(title.getTitle()).toBe('Transferir');
   });
 
 

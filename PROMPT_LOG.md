@@ -939,3 +939,90 @@ entre features.
 
 **Decisión:** ✅ aceptado con modificaciones
 **Por qué:** Acepté la implementación con modificaciones porque pude reutilizar la lógica de dominio y el store de cuentas sin duplicar responsabilidades. Me pareció especialmente importante corregir el problema de las lecturas pisadas, para asegurarme de que una transferencia nunca se valide con un saldo desactualizado. También revisé los casos de error, seguimiento y reintento para evitar transferencias duplicadas.
+## #24 · Pantalla de transferencias (/transfers)
+**Herramienta:** Kiro
+
+**Prompt:** (resumen) Diseño e implementación de la pantalla /transfers usando el TransferStore y
+el TransferTracker del #23, reemplazando el placeholder transfers.page.ts. Sin TDD: los tests
+junto con la implementación. Sin tocar la lógica de application ni la política. Pedí proponer sin
+escribir código; después respondí las decisiones (con ajustes) y di luz verde.
+
+### Decisiones que tomé yo (elegí entre las alternativas que me propuso Kiro)
+- **Tres piezas, presentacionales:** la página (contenedor) provee TransferStore y
+  TransferTracker a nivel de componente (no en root) y cancela los timers con DestroyRef; un
+  formulario presentacional (Reactive Forms) y un panel de estado presentacional. Más una función
+  de dominio con tests para los destinos elegibles (eligibleDestinations), ya que canTransfer es
+  la validación final. Los componentes solo muestran y emiten; la lógica vive en el store/dominio.
+- **El formulario NO se reemplaza ni se destruye:** queda renderizado y deshabilitado
+  (form.disable con emitEvent false) mientras el estado es submitting, tracking o terminal, con el
+  panel debajo. Razón: si se destruye con un @if, pierde su FormGroup y "Intentar de nuevo" (red)
+  devolvería un formulario vacío; además el usuario ve qué está enviando. Se rehabilita en idle y
+  blocked.
+- **blocked deja el formulario editable:** cualquier cambio estando en blocked, o con un lastError
+  visible, limpia ese mensaje (store.reset()), para que no quede un motivo viejo.
+- **Destino:** las cuentas de otra moneda y la de origen aparecen deshabilitadas con el motivo en
+  la opción; además, como mat-select saltea las deshabilitadas con el teclado, una mat-hint bajo
+  el destino lista las no disponibles con su motivo ("No disponibles: Cuenta X (moneda distinta)").
+  Sin origen, el destino está deshabilitado con la ayuda "Elegí primero la cuenta de origen".
+  Nunca se preselecciona; cambiar el origen limpia un destino que dejó de ser válido y recalcula
+  la moneda del monto. Sin ningún destino válido: mensaje con link a /accounts.
+- **Origen:** preseleccionado desde ?from= (validado contra las cuentas: no se descarta antes de
+  que cargue la lista, y si no existe se ignora). Debajo, "Disponible: ARS 849.000,00" de la fila
+  del AccountsStore; si no se pudo calcular, el texto de available-unknown y un botón Reintentar.
+- **Monto:** igual que el diálogo de alta (ValidatorFn con parseAmountInput y la moneda del
+  origen, vista previa, error al salir del campo o al enviar); se recalcula al cambiar el origen.
+- **Panel uncertain:** recentOutgoing con TransactionRow y, si hay outgoingPending, una
+  línea-resumen "Tenés N transferencia(s) en proceso desde esta cuenta". En red, "Intentar de
+  nuevo" solo cuando verifying es false; en invalid-response, sin "Intentar de nuevo".
+- **Terminales:** "Hacer otra transferencia" vuelve el store a idle y limpia monto y descripción
+  (mantiene origen y destino) y pone el foco en el monto; "Ver cuenta" navega a /accounts/<id>. Al
+  salir de la pantalla durante el seguimiento se cortan los timers (DestroyRef -> store.destroy()).
+- **Título solo en la ruta (title: 'Transferir'):** sin usar el servicio Title en el componente.
+  Actualicé el test de títulos que esperaba 'Transferencias' para /transfers. La etiqueta de la
+  barra del shell sigue diciendo "Transferencias".
+- **Accesibilidad y layout:** un h1, panel de progreso en role="status" aria-live polite, errores
+  con role="alert", foco al encabezado del resultado en cada terminal; una sola columna, gap
+  --space-3, subscriptSizing dynamic y sin colores fuera de tokens.
+
+### Ajuste de un test preexistente (cambio legítimo, avisado)
+- routing-integration.spec.ts: la aserción del título de /transfers pasó de 'Transferencias' a
+  'Transferir'; y agregué un TransferPort falso a sus providers, porque la página ahora provee
+  TransferStore/TransferTracker, que lo inyectan al navegar a /transfers.
+
+### Diagnóstico durante los tests (con evidencia)
+- El spec de la página fallaba con "Cannot match any routes": los tests no llamaban a setup()
+  (nunca se configuraba provideRouter). Lo moví al beforeEach. Y como TransferStore se provee a
+  nivel de componente, lo obtengo por el injector del routeDebugElement, no por TestBed.inject.
+- focusAmount reventaba en los tests con un nativeElement indefinido: lo hice null-safe.
+
+### Fix posterior: el adaptador no desenvolvía el envelope de la API
+Al probar la pantalla, TODAS las transferencias terminaban en "el servidor aceptó la transferencia
+pero no pudimos leer su identificador" (invalid-response). Reporté que el mapper parecía devolver
+error ante un 200 y que, como en transactions (`{ transaction: {...} }`), transfers debía
+desenvolver `{ transfer: {...} }`.
+
+- **Causa raíz (confirmada leyendo el código):** el adaptador le pasaba el cuerpo entero
+  (`{ transfer: {...} }`) a mapTransfer, que espera id/status/from/to en el nivel superior. Al leer
+  dto.from/dto.to sobre el envelope, ambos daban undefined -> el mapper lanzaba InvalidDataError ->
+  runRequest lo clasificaba como invalid-response. Por eso el POST y cada GET del seguimiento caían
+  en ese estado. El de transactions ya desenvolvía raw.transaction; a transfers le faltaba el
+  raw.transfer equivalente. Y el test del adaptador flusheaba el cuerpo SIN envolver (el shape que
+  el mapper esperaba), así que pasaba y tapaba el bug.
+- **Qué cambié:** transfer-http.adapter.ts: create y getById desenvuelven raw.transfer antes de
+  mapear (tipo TransferEnvelope), igual que transactions con raw.transaction (evidencia: samples 11,
+  12, 43, 44, 45). transfer-http.adapter.spec.ts: corregí los dos tests para que flusheen el cuerpo
+  ENVUELTO como responde la API real (era un test equivocado) y agregué uno que fija el contrato: un
+  2xx SIN envelope da invalid-response, no un éxito silencioso ni un crash. transfer.dto.ts:
+  endurecí mapTransfer para que un DTO ausente o no-objeto lance InvalidDataError (dato inválido) en
+  vez de un TypeError crudo que escaparía sin clasificar (lo descubrió el test nuevo del envelope).
+
+**Resultado:** transfers.page + transfer-form + transfer-status-panel + la función de dominio
+transfer-destinations, todo con tests de comportamiento, un test de integración con router y
+stores reales y puertos que cuentan y lanzan a la 12ª (conteos create 1, getById 2, cuentas 3,
+pendientes 3) y un test de que salir durante el seguimiento no deja timers. El fix del envelope
+devolvió el seguimiento a confirmar en vez de quedar siempre incierto. De 535 a 583 tests (582 de
+la pantalla + 1 del envelope), ng build OK (el warning de budget es previo). Sin dependencias
+nuevas, sin tocar application ni la política, sin imports entre features.
+
+**Decisión:** ✅ aceptado con modificaciones
+**Por qué:** Acepté la implementación con modificaciones porque la pantalla reutiliza la lógica del store y mantiene los componentes presentacionales. También revisé los estados del formulario, los destinos no disponibles y los casos de reintento. Durante las pruebas encontramos un problema real en el adaptador: no estaba desenvolviendo la respuesta de la API. Corregí el mapeo y los tests para que reflejaran el formato real de la respuesta.

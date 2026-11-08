@@ -39,6 +39,12 @@ function mapLeg(value: unknown): Transaction | null {
  * legs are null (there would be nothing to show).
  */
 export function mapTransfer(dto: TransferDto): Transfer {
+  // Guard the shape before reading fields: a missing/non-object DTO (e.g. the
+  // envelope was not unwrapped, or a corrupt 2xx body) is invalid data, not a
+  // TypeError. runRequest turns InvalidDataError into `invalid-response`.
+  if (typeof dto !== 'object' || dto === null) {
+    throw new InvalidDataError('Expected a transfer object');
+  }
   const from = mapLeg(dto.from);
   const to = mapLeg(dto.to);
   if (from === null && to === null) {

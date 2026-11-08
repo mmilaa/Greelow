@@ -1,0 +1,29 @@
+<section class="transfers">
+  <h1 class="transfers__title">Transferir</h1>
+
+  <app-transfer-form
+    [accounts]="accountOptions()"
+    [available]="available()"
+    [availableUnknown]="availableUnknown()"
+    [destinations]="destinations()"
+    [formDisabled]="formDisabled()"
+    [busy]="busy()"
+    [inFlightFromOrigin]="inFlightFromOrigin()"
+    [lastError]="lastError()"
+    (transferSubmit)="onSubmit($event)"
+    (retryAvailable)="onRetryAvailable()"
+    (formEdited)="onFormEdited()"
+  />
+
+  @if (state().status !== 'idle') {
+    <app-transfer-status-panel
+      class="transfers__panel"
+      [state]="state()"
+      (verifyAgain)="onVerifyAgain()"
+      (retryNetwork)="onRetryNetwork()"
+      (again)="onAgain()"
+      (viewAccount)="onViewAccount()"
+      (retryAvailable)="onRetryAvailable()"
+    />
+  }
+</section>

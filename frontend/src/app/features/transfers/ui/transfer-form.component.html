@@ -1,0 +1,98 @@
+<form class="transfer-form" [formGroup]="form" (ngSubmit)="submit()" (input)="onEdit()" (change)="onEdit()" novalidate>
+  @if (lastErrorText(); as message) {
+    <p class="transfer-form__error" role="alert">{{ message }}</p>
+  }
+
+  <!-- Origin -->
+  <mat-form-field appearance="outline" subscriptSizing="dynamic">
+    <mat-label>Cuenta de origen</mat-label>
+    <mat-select formControlName="origin">
+      @for (opt of accounts(); track opt.id) {
+        <mat-option [value]="opt.id">{{ opt.name }} · {{ opt.currency }} · {{ opt.id }}</mat-option>
+      }
+    </mat-select>
+    @if (availableText(); as text) {
+      <mat-hint>{{ text }}</mat-hint>
+    }
+  </mat-form-field>
+
+  @if (availableUnknown()) {
+    <p class="transfer-form__available-unknown" role="status">
+      {{ availableUnknownText() }}
+      <button mat-stroked-button type="button" (click)="retryAvailable.emit()">Reintentar</button>
+    </p>
+  }
+
+  <!-- Destination -->
+  <mat-form-field appearance="outline" subscriptSizing="dynamic">
+    <mat-label>Cuenta de destino</mat-label>
+    <mat-select formControlName="destination" [disabled]="!hasOrigin()">
+      @for (opt of destinationOptions(); track opt.id) {
+        <mat-option [value]="opt.id" [disabled]="!opt.eligible">
+          {{ opt.name }} · {{ opt.currency }} · {{ opt.id }}
+          @if (opt.reasonText) {
+            — {{ opt.reasonText }}
+          }
+        </mat-option>
+      }
+    </mat-select>
+    @if (ineligibleHint(); as hint) {
+      <mat-hint>{{ hint }}</mat-hint>
+    }
+  </mat-form-field>
+
+  @if (noDestinationMessage(); as msg) {
+    <p class="transfer-form__no-destination" role="status">
+      {{ msg }}
+      <a routerLink="/accounts">Crear otra cuenta</a>
+    </p>
+  }
+
+  <!-- Amount -->
+  <mat-form-field appearance="outline" subscriptSizing="dynamic" #amountField>
+    <mat-label>Monto{{ originCurrency() ? ' (' + originCurrency() + ')' : '' }}</mat-label>
+    <input
+      matInput
+      type="text"
+      inputmode="decimal"
+      formControlName="amount"
+      autocomplete="off"
+      [attr.aria-describedby]="preview() ? 'transfer-preview' : null"
+    />
+    @if (preview(); as text) {
+      <mat-hint id="transfer-preview">{{ text }}</mat-hint>
+    } @else {
+      <mat-hint>Usá coma o punto para los centavos, sin separador de miles.</mat-hint>
+    }
+    <mat-error>{{ amountErrorText() }}</mat-error>
+  </mat-form-field>
+
+  <!-- Description -->
+  <mat-form-field appearance="outline" subscriptSizing="dynamic">
+    <mat-label>Descripción (opcional)</mat-label>
+    <input matInput type="text" formControlName="description" maxlength="500" autocomplete="off" />
+    @if (form.controls.description.hasError('maxlength')) {
+      <mat-error>La descripción admite como máximo 500 caracteres.</mat-error>
+    }
+  </mat-form-field>
+
+  @if (inFlightFromOrigin()) {
+    <p class="transfer-form__inflight" role="alert">{{ inFlightText() }}</p>
+  }
+
+  <button
+    mat-flat-button
+    color="primary"
+    type="button"
+    class="transfer-form__submit"
+    [attr.aria-label]="busy() ? 'Transfiriendo…' : null"
+    [disabled]="busy() || inFlightFromOrigin() || formDisabled()"
+    [disabledInteractive]="true"
+    (click)="submit()"
+  >
+    {{ busy() ? 'Transfiriendo…' : 'Transferir' }}
+    @if (busy()) {
+      <mat-progress-spinner mode="indeterminate" diameter="20" aria-hidden="true" />
+    }
+  </button>
+</form>

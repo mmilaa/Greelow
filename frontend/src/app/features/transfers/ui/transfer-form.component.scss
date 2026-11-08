@@ -1,0 +1,31 @@
+.transfer-form {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.transfer-form__error {
+  margin: 0;
+  color: var(--color-negative);
+}
+
+.transfer-form__available-unknown,
+.transfer-form__no-destination,
+.transfer-form__inflight {
+  margin: 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  color: var(--color-text-soft);
+}
+
+.transfer-form__inflight {
+  color: var(--color-negative);
+}
+
+.transfer-form__submit {
+  justify-self: start;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+}

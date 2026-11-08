@@ -93,3 +93,8 @@ export function transferUnconfirmedMessage(): string {
 export function verificationFailedNotice(): string {
   return 'No pudimos leer los movimientos de la cuenta para verificar. Revisalos manualmente.';
 }
+
+/** Short reason shown on a disabled destination option (and in the hint). */
+export function destinationIneligibleReason(reason: 'same-account' | 'cross-currency'): string {
+  return reason === 'same-account' ? 'Es la cuenta de origen' : 'Moneda distinta';
+}

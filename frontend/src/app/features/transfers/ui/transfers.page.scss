@@ -1,0 +1,15 @@
+.transfers {
+  display: grid;
+  gap: var(--space-4);
+  max-width: 32rem;
+  margin: 0 auto;
+  padding: var(--space-4);
+}
+
+.transfers__title {
+  margin: 0;
+}
+
+.transfers__panel {
+  display: block;
+}

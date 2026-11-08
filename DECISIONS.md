@@ -102,7 +102,10 @@ Desacoplé el detalle de cuentas de la feature de movimientos usando un launcher
 ### 28. Lectura fresca antes de validar una transferencia
 Hago una lectura nueva de pendientes y cuentas antes de validar, para no usar un saldo desactualizado. También agregué un control para detectar si otra lectura más reciente la pisa: en ese caso reintenta una vez y, si no logra obtener datos actualizados, bloquea la transferencia. Así evito validar con un disponible anterior y habilitar un posible sobregiro.
 
-### 29. Tradeoffs / lo que no implementé y por qué
+### 29. Pantalla de transferencias: componentes que no se destruyen y motivos visibles
+Separé el formulario y el panel de estado para mantener la lógica fuera de los componentes. Decidí no destruir el formulario durante el proceso para conservar lo que el usuario ingresó y permitir reintentar sin empezar de cero. También agregué los motivos por los que ciertos destinos no se pueden seleccionar, incluyendo una explicación accesible debajo del campo.
+
+### 31. Tradeoffs / lo que no implementé y por qué
 1. No implementé la conversión de monedas en las transferencias entre monedas distintas: por ahora las bloqueo. La conversión quedaría como mejora futura.
 2. No implementé edición de cuentas: la moneda es inmutable y el nombre no se puede editar por ahora; quedaría como mejora futura.
 3. El saldo disponible solo protege a quien usa esta app; el sobregiro provocado desde afuera o por condiciones de carrera no se puede evitar desde el cliente. La solución de fondo es del backend.

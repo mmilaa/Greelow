@@ -1,0 +1,110 @@
+@switch (state().status) {
+  @case ('validating') {
+    <div class="panel" role="status" aria-live="polite">
+      <mat-progress-spinner mode="indeterminate" diameter="32" />
+      <p class="panel__text">Validando…</p>
+    </div>
+  }
+
+  @case ('blocked') {
+    <div class="panel panel--block" role="alert">
+      <mat-icon class="panel__icon panel__icon--error" aria-hidden="true">block</mat-icon>
+      <p class="panel__text">{{ blockMessage() }}</p>
+      @if (isAvailableUnknown()) {
+        <button mat-stroked-button type="button" (click)="retryAvailable.emit()">Reintentar</button>
+      }
+    </div>
+  }
+
+  @case ('submitting') {
+    <div class="panel" role="status" aria-live="polite">
+      <mat-progress-spinner mode="indeterminate" diameter="32" />
+      <p class="panel__text">Transfiriendo…</p>
+    </div>
+  }
+
+  @case ('tracking') {
+    <div class="panel" role="status" aria-live="polite">
+      <mat-progress-spinner mode="indeterminate" diameter="32" />
+      <p class="panel__text">{{ trackingText() }}</p>
+    </div>
+  }
+
+  @case ('confirmed') {
+    <div class="panel panel--ok" role="status" aria-live="polite">
+      <h2 id="transfer-result-heading" tabindex="-1" class="panel__heading">
+        <mat-icon class="panel__icon panel__icon--ok" aria-hidden="true">check_circle</mat-icon>
+        {{ confirmedText() }}
+      </h2>
+      <div class="panel__actions">
+        <button mat-flat-button color="primary" type="button" (click)="viewAccount.emit()">Ver cuenta</button>
+        <button mat-stroked-button type="button" (click)="again.emit()">Hacer otra transferencia</button>
+      </div>
+    </div>
+  }
+
+  @case ('failed') {
+    <div class="panel panel--fail" role="alert">
+      <h2 id="transfer-result-heading" tabindex="-1" class="panel__heading">
+        <mat-icon class="panel__icon panel__icon--error" aria-hidden="true">error</mat-icon>
+        {{ failedText() }}
+      </h2>
+      <div class="panel__actions">
+        <button mat-stroked-button type="button" (click)="again.emit()">Hacer otra transferencia</button>
+      </div>
+    </div>
+  }
+
+  @case ('unconfirmed') {
+    <div class="panel panel--warn" role="status" aria-live="polite">
+      <h2 id="transfer-result-heading" tabindex="-1" class="panel__heading">{{ unconfirmedText() }}</h2>
+      <div class="panel__actions">
+        <button mat-flat-button color="primary" type="button" (click)="verifyAgain.emit()">Verificar de nuevo</button>
+        <button mat-stroked-button type="button" (click)="again.emit()">Hacer otra transferencia</button>
+      </div>
+    </div>
+  }
+
+  @case ('uncertain') {
+    <div class="panel panel--warn" [attr.role]="isInvalidResponseUncertain() ? 'alert' : 'status'" aria-live="polite">
+      <h2 id="transfer-result-heading" tabindex="-1" class="panel__heading">{{ uncertainText() }}</h2>
+
+      @if (verificationFailed()) {
+        <p class="panel__notice">{{ verificationFailedText() }}</p>
+      }
+
+      @if (recentOutgoing().length > 0) {
+        <p class="panel__subheading">Últimas transferencias de la cuenta</p>
+        <ul class="panel__list">
+          @for (tx of recentOutgoing(); track tx.id) {
+            <li><app-transaction-row [transaction]="tx" /></li>
+          }
+        </ul>
+      }
+
+      @if (pendingCount() > 0) {
+        <p class="panel__notice">
+          Tenés {{ pendingCount() }} transferencia(s) en proceso desde esta cuenta.
+        </p>
+      }
+
+      <div class="panel__actions">
+        @if (isNetworkUncertain()) {
+          <button
+            mat-flat-button
+            color="primary"
+            type="button"
+            [disabled]="verifying()"
+            (click)="retryNetwork.emit()"
+          >
+            Intentar de nuevo
+          </button>
+          <button mat-stroked-button type="button" (click)="viewAccount.emit()">Ver cuenta</button>
+        } @else {
+          <button mat-flat-button color="primary" type="button" (click)="viewAccount.emit()">Ver cuenta</button>
+          <button mat-stroked-button type="button" (click)="again.emit()">Hacer otra transferencia</button>
+        }
+      </div>
+    </div>
+  }
+}

@@ -35,7 +35,7 @@ export const routes: Routes = [
       },
       {
         path: 'transfers',
-        title: 'Transferencias',
+        title: 'Transferir',
         loadComponent: () =>
           import('./features/transfers/ui/transfers.page').then((m) => m.TransfersPage),
       },

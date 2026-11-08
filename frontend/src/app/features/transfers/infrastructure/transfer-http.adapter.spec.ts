@@ -58,7 +58,8 @@ describe('TransferHttpAdapter', () => {
     const req = httpMock.expectOne(`${BASE}/transfers`);
     expect(req.request.method).toBe('POST');
     expect(req.request.body).toEqual({ fromAccountId: 'acc-1', toAccountId: 'acc-2', amount: 5000 });
-    req.flush({ id: 'transfer-1', status: 'pending', from: leg(), to: null });
+    // The API wraps the created resource: { transfer: { ... } } (samples 11, 43).
+    req.flush({ transfer: { id: 'transfer-1', status: 'pending', from: leg(), to: null } });
 
     const transfer = await promise;
     expect(transfer.id).toBe('transfer-1');
@@ -80,13 +81,26 @@ describe('TransferHttpAdapter', () => {
     await expect(promise).rejects.toMatchObject({ error: { kind: 'insufficient-funds' } });
   });
 
-  it('getById fetches and maps a transfer', async () => {
+  it('getById fetches and maps a transfer (unwrapping the envelope)', async () => {
     const promise = port.getById('transfer-1');
     const req = httpMock.expectOne(`${BASE}/transfers/transfer-1`);
     expect(req.request.method).toBe('GET');
-    req.flush({ id: 'transfer-1', status: 'completed', from: leg({ status: 'completed' }), to: null });
+    // Wrapped as the API returns it (samples 12, 44, 45).
+    req.flush({ transfer: { id: 'transfer-1', status: 'completed', from: leg({ status: 'completed' }), to: null } });
 
     const transfer = await promise;
     expect(transfer.status).toBe('completed');
+  });
+
+  it('a 2xx body WITHOUT the envelope is invalid-response, not a silent success', async () => {
+    // Guards the unwrap: if the adapter stopped unwrapping, an unwrapped body
+    // would leave from/to undefined and mapTransfer would throw, surfacing as
+    // invalid-response. This is exactly the bug that marked every transfer
+    // uncertain, so we pin the contract here.
+    const promise = port.getById('transfer-1');
+    const req = httpMock.expectOne(`${BASE}/transfers/transfer-1`);
+    req.flush({ id: 'transfer-1', status: 'completed', from: leg(), to: null });
+
+    await expect(promise).rejects.toMatchObject({ error: { kind: 'invalid-response' } });
   });
 });
