@@ -1,0 +1,16 @@
+﻿{
+    "transaction":  {
+                        "id":  "txn-1794087182184",
+                        "accountId":  "acc-2",
+                        "type":  "expense",
+                        "direction":  null,
+                        "amount":  1000,
+                        "currency":  "USD",
+                        "category":  "other",
+                        "description":  "mas que el saldo",
+                        "status":  "completed",
+                        "counterpartAccountId":  null,
+                        "transferId":  null,
+                        "createdAt":  "2026-11-07T21:33:02.184Z"
+                    }
+}

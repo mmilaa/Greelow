@@ -1,0 +1,97 @@
+// On narrow screens (320px) the content scrolls instead of being clipped.
+:host {
+  display: block;
+  max-width: 100%;
+}
+
+mat-dialog-content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  // MatDialog already caps the height and scrolls; keep the form readable.
+  min-width: min(420px, 80vw);
+}
+
+.dialog-account {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  margin: 0;
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface-alt);
+}
+
+.dialog-account__name {
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.dialog-account__meta {
+  font-size: 0.8125rem;
+  color: var(--color-text-soft);
+  overflow-wrap: anywhere;
+}
+
+// The form's fields need their own vertical rhythm; the dialog-content gap only
+// separates the account panel from the form (two children), not the fields.
+.dialog-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.dialog-field {
+  width: 100%;
+}
+
+// Give the amount a bit more breathing room from category/description.
+.dialog-field--amount {
+  margin-bottom: var(--space-6);
+}
+
+.dialog-preview {
+  margin: 0;
+  color: var(--color-text);
+  font-weight: 500;
+}
+
+.dialog-warning {
+  margin: 0;
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-sm);
+  background: var(--color-warning-bg);
+  color: var(--color-warning);
+}
+
+.dialog-error {
+  margin: 0;
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-sm);
+  background: var(--color-negative-bg);
+  color: var(--color-negative);
+}
+
+.dialog-error__link {
+  all: unset;
+  display: inline-block;
+  margin-top: var(--space-1);
+  cursor: pointer;
+  color: var(--color-negative);
+  font-weight: 600;
+  text-decoration: underline;
+}
+
+.dialog-error__link:focus-visible {
+  outline: 2px solid var(--color-negative);
+  outline-offset: 2px;
+}
+
+// Keep the in-flight spinner inline with the button label.
+.dialog-submit {
+  mat-progress-spinner {
+    display: inline-block;
+    margin-right: var(--space-2);
+    vertical-align: middle;
+  }
+}

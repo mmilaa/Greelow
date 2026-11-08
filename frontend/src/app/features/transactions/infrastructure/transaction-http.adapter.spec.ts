@@ -83,7 +83,9 @@ describe('TransactionHttpAdapter', () => {
       amount: 12.34,
       category: 'groceries',
     });
-    req.flush(expenseDto({ amount: 12.34 }));
+    // The API wraps the created resource: { transaction: { ... } } (see
+    // docs/api-samples/10,37,41). The adapter must unwrap it before mapping.
+    req.flush({ transaction: expenseDto({ amount: 12.34 }) });
 
     const txn = await promise;
     expect(txn.amount.toDecimal()).toBe(12.34);

@@ -54,6 +54,16 @@ describe('TransactionRowComponent', () => {
     expect(el.textContent).toContain('Crypto');
   });
 
+  it('renders an income whose category is "transfer" without breaking (API allows it)', () => {
+    // docs/api-samples/41: the API accepts an income with category transfer.
+    // categoriesFor is a client rule; the row must still render.
+    const fixture = render(txn({ type: 'income', direction: null, category: 'transfer' }));
+    const el = fixture.nativeElement as HTMLElement;
+    expect(el.textContent).toContain('Ingreso');
+    // Category IS shown for non-transfer types (only transfer-type rows omit it).
+    expect(el.textContent).toContain('Transferencia');
+  });
+
   it('renders a <time> element with the raw ISO in datetime', () => {
     const el = render(txn()).nativeElement as HTMLElement;
     const time = el.querySelector('time');

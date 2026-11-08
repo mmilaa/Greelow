@@ -9,14 +9,18 @@
     <button
       mat-stroked-button
       type="button"
-      aria-label="Actualizar"
+      [attr.aria-label]="refreshing() ? 'Actualizando…' : 'Actualizar'"
       matTooltip="Actualizar"
       class="accounts-refresh"
       (click)="refresh()"
       [disabled]="refreshing()"
       [disabledInteractive]="true"
     >
-      <mat-icon>refresh</mat-icon>
+      @if (refreshing()) {
+        <mat-progress-spinner mode="indeterminate" diameter="20" aria-hidden="true" />
+      } @else {
+        <mat-icon>refresh</mat-icon>
+      }
     </button>
   }
 </app-page-header>

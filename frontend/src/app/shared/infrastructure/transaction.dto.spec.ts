@@ -61,6 +61,16 @@ describe('mapTransaction', () => {
     expect(t.amount.toDecimal()).toBe(12.34);
   });
 
+  // Characterization only (the mapper is not changed): the API can store more
+  // than 2 decimals (docs/api-samples/40-expense-three-decimals.json). We round
+  // to the nearest cent rather than reject, so one such row never breaks the
+  // account. 12.345 -> 1235 minor units -> 12.35.
+  it('rounds an API amount with 3 decimals to the nearest cent (12.345 -> 12.35)', () => {
+    const t = mapTransaction(expenseDto({ amount: 12.345, currency: 'ARS' }));
+    expect(t.amount.amountMinor).toBe(1235);
+    expect(t.amount.toDecimal()).toBe(12.35);
+  });
+
   it('round-trips a non-round negative amount (case A)', () => {
     const t = mapTransaction(expenseDto({ amount: -169796.34 }));
     expect(t.amount.amountMinor).toBe(-16979634);

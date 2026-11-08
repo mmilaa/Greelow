@@ -1,0 +1,2 @@
+﻿STATUS: 400
+{"errors":[{"field":"category","message":"category must be one of: salary, freelance, rent, groceries, transport, entertainment, utilities, health, transfer, other"}]}

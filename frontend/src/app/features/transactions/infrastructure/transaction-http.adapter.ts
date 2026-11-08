@@ -57,12 +57,12 @@ export class TransactionHttpAdapter extends TransactionPort {
 
   override create(input: CreateTransactionInput): Promise<Transaction> {
     return this.runner.run(
-      this.http.post<TransactionDto>(
+      this.http.post<{ transaction: TransactionDto }>(
         `${this.baseUrl}/transactions`,
         toCreateTransactionBody(input),
       ),
       'create-transaction',
-      (raw) => mapTransaction(raw),
+      (raw) => mapTransaction(raw.transaction),
     );
   }
 }

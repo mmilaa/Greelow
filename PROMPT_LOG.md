@@ -774,3 +774,79 @@ sin dependencias nuevas.
 
 **Decisión:** ✅ aceptado
 **Por qué:** Acepté la implementación porque los filtros quedan sincronizados con la URL y la paginación sigue dependiendo de la API, sin perder consistencia.
+## #22 · Registrar ingreso y gasto (alta de transacción)
+**Herramienta:** Kiro
+
+**Prompt:** (resumen) Implementar el alta de ingreso/gasto. Empezó como pantalla
+/transactions/new y después pedí pasarla a diálogo (MatDialog) abierto desde el detalle de la
+cuenta, reusando todo el dominio y el store. Siguieron varias rondas de ajuste: peso del bundle,
+guards de doble clic, fixes de UI del diálogo y el error de validación del monto. Pedí leer antes
+los samples 10, 20 y 37 a 41.
+
+### Verificación de supuestos contra los samples (no contradecían, así que escribí)
+- 37 (gasto mayor al saldo): la API lo acepta y deja la cuenta en negativo -> aviso no bloqueante
+  con leavesNegative.
+- 38 y 39 (400): mismo formato { errors: [{ field, message }] } -> validation, sin kind nuevo;
+  resalto los controles que marca la API (category, description).
+- 40 (12.345): la API guarda 3 decimales; el formulario permite 2 y lo de la API se redondea al
+  centavo (test de caracterización en el spec del mapper, sin tocar el mapper).
+- 41 (ingreso con categoría transfer): la API lo acepta -> categoriesFor es regla del cliente; la
+  fila se muestra sin romper.
+
+### Decisiones que tomé yo (elegí entre las alternativas que me propuso Kiro)
+- **Dominio puro con tests:** parseAmountInput (centavos con enteros, nunca float; too-large con
+  try/catch solo de InvalidAmountError; "-" inicial -> not-positive), categoriesFor(type, catalog)
+  intersectando el catálogo real con orden alfabético en español y "Otros" al final, y
+  leavesNegative(type, available, amount) (ingreso siempre false; disponible desconocido no avisa).
+- **Mensajes en el catálogo de shared/ui:** el de resultado incierto (network/invalid-response)
+  parametrizado por sustantivo (movimiento/transferencia) para reusarlo en transferencias; el de
+  too-many-decimals menciona el punto de miles con ejemplo.
+- **De pantalla a diálogo:** la cuenta y el tipo ya vienen decididos al abrir (botones del detalle
+  "Registrar ingreso"/"Registrar gasto"); el diálogo no tiene selector de cuenta ni de tipo.
+  Eliminé la página, su ruta, el manejo de parámetros de la URL y los estados sin-cuentas/lista-falla.
+- **Desacople sin importar entre features:** clase abstracta NewTransactionLauncher en shared;
+  implementación en transactions ligada en la raíz (ver DECISIONS #27).
+- **Reload del detalle tras crear:** el store del detalle ganó reload() (refresca cuentas y
+  re-pide los 5 movimientos con el contador de generación). Cerrar sin crear no recarga.
+- **No se puede cerrar mientras envía** (Escape, backdrop y botón), para que el resultado no quede
+  sin verse.
+
+### Bundle inicial (varias vueltas)
+Ligar la implementación directa del launcher en la raíz metía MatDialog en el bundle inicial
+(subió a ~532 kB). Lo resolví con un launcher liviano en la raíz (sin importar Material ni el
+diálogo) que hace import() dinámico de la implementación al primer open: el inicial volvió a ~503
+kB y MatDialog quedó en el chunk lazy del diálogo. El launcher es de un solo vuelo y, si el chunk
+no carga, el detalle muestra un aviso para reintentar.
+
+### disabledInteractive no frena el clic en <button>
+En Material 22.2.5, disabledInteractive solo cancela el clic en anclas, no en botones: el
+manejador se ejecuta igual. Audité todos los usos: agregué un guard propio (if (…) return) en
+Actualizar de cuentas, en Registrar ingreso/gasto del detalle y en Actualizar de los filtros; los
+dos diálogos ya se protegían en su submit/store. Cada guard con su test de "un clic deshabilitado
+no hace nada".
+
+### El error del monto no aparecía (diagnóstico)
+"11." y "11-" no mostraban error ni dejaban enviar, pero tampoco avisaban. La causa: la validación
+del monto vivía en una señal aparte y el FormControl "amount" no tenía ningún validador, así que
+el <mat-error> (que depende de que el control sea inválido y esté tocado) nunca se activaba. Lo
+arreglé con una ValidatorFn sobre el control que delega en parseAmountInput y expone el motivo
+como error de Angular; el <mat-error> lee el mensaje del catálogo. Tests sobre el DOM: "11." y
+"11.22,33,222,333," marcan error tras blur; "11,5" y "11.25" no; enviar vacío o inválido muestra
+el error, no llama a create y deja el foco en el monto.
+
+### Ajustes de vista del diálogo
+La vista previa "Vas a registrar…" quedó abajo, antes de los botones, junto al aviso de saldo
+negativo; corregí el espaciado entre campos (hints que chocaban con los labels) quitando el
+subscriptSizing dinámico para que todos reserven su franja, y separé un poco más el campo del
+monto de categoría y descripción.
+
+**Resultado:** dominio (parseAmountInput, categoriesFor, leavesNegative) con tests; store de alta
+idempotente; diálogo con validación real del monto, vista previa, aviso de negativo, resultado
+incierto con link, resaltado de campos en 400 y bloqueo de cierre al enviar; launcher abstracto en
+shared + launcher liviano con carga diferida en la raíz; reload() del detalle; botones del detalle
+con guard de doble clic; test de la impl real con MatDialog falso y test de integración con stores
+reales. Terminó en 487 tests, ng build OK, bundle inicial ~503 kB. No se tocó transfer-policy ni
+los mappers (salvo el test de caracterización) y no se importó entre features.
+
+**Decisión:** ✅ aceptado con modificaciones
+**Por qué:** Acepté la implementación con algunos ajustes porque pude mantener el alta desacoplada de accounts y evitar que el diálogo aumentara el bundle inicial. También revisé la validación del monto y los casos de doble clic, errores y cierre durante el envío, para asegurarme de que el usuario siempre reciba una respuesta clara.

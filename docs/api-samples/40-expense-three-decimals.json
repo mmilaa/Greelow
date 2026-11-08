@@ -1,0 +1,16 @@
+﻿{
+    "transaction":  {
+                        "id":  "txn-1794087182249",
+                        "accountId":  "acc-1",
+                        "type":  "expense",
+                        "direction":  null,
+                        "amount":  12.345,
+                        "currency":  "ARS",
+                        "category":  "other",
+                        "description":  "tres decimales",
+                        "status":  "completed",
+                        "counterpartAccountId":  null,
+                        "transferId":  null,
+                        "createdAt":  "2026-11-07T21:33:02.249Z"
+                    }
+}

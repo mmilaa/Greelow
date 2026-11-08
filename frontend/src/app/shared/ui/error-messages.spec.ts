@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { errorMessage } from './error-messages';
+import { errorMessage, uncertainResultMessage, amountErrorMessage } from './error-messages';
 import { type ApiError } from '../domain/map-api-error';
 
 describe('errorMessage', () => {
@@ -75,5 +75,34 @@ describe('errorMessage', () => {
     for (const e of samples) {
       expect(errorMessage(e).length).toBeGreaterThan(0);
     }
+  });
+});
+
+describe('uncertainResultMessage', () => {
+  it('uses "el movimiento" for a transaction', () => {
+    expect(uncertainResultMessage('movimiento')).toContain('el movimiento');
+    expect(uncertainResultMessage('movimiento')).toContain('No pudimos confirmar');
+  });
+
+  it('uses "la transferencia" for a transfer', () => {
+    expect(uncertainResultMessage('transferencia')).toContain('la transferencia');
+  });
+});
+
+describe('amountErrorMessage', () => {
+  it('has a non-empty message for every reason', () => {
+    for (const r of ['empty', 'invalid-format', 'too-many-decimals', 'not-positive', 'too-large'] as const) {
+      expect(amountErrorMessage(r).length).toBeGreaterThan(0);
+    }
+  });
+
+  it('explains that the type decides sign for not-positive', () => {
+    expect(amountErrorMessage('not-positive')).toContain('mayor a cero');
+  });
+
+  it('mentions the thousands separator and the example for too-many-decimals', () => {
+    const msg = amountErrorMessage('too-many-decimals');
+    expect(msg).toContain('miles');
+    expect(msg).toContain('1234,56');
   });
 });

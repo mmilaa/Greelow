@@ -45,6 +45,16 @@ describe('TransactionsFiltersComponent', () => {
     expect(refreshed).toBe(true);
   });
 
+  it('does not emit refresh while loading (disabledInteractive click)', () => {
+    const fixture = render();
+    fixture.componentRef.setInput('loading', true);
+    fixture.detectChanges();
+    let refreshed = false;
+    fixture.componentInstance.refresh.subscribe(() => (refreshed = true));
+    fixture.componentInstance.onRefresh();
+    expect(refreshed).toBe(false);
+  });
+
   it('keeps the search box in sync with the filter input (Back restores the text)', () => {
     const fixture = render({ ...DEFAULT_FILTER, search: 'super' });
     expect(fixture.componentInstance.searchControl.value).toBe('super');

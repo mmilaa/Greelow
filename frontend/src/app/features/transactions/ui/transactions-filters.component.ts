@@ -125,6 +125,11 @@ export class TransactionsFiltersComponent {
   }
 
   onRefresh(): void {
+    // disabledInteractive does not cancel the click on a <button>, so guard
+    // against emitting a second refresh while one is already loading.
+    if (this.loading()) {
+      return;
+    }
     this.refresh.emit();
   }
 }

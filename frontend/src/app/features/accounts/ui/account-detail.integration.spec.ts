@@ -9,6 +9,7 @@ import {
   TransactionPort,
   type TransactionQuery,
 } from '../../../shared/application/transaction.port';
+import { NewTransactionLauncher } from '../../../shared/ui/new-transaction-launcher';
 import { type Account } from '../../../shared/domain/account';
 import { type Transaction } from '../../../shared/domain/transaction';
 import { type AccountTransaction } from '../../../shared/domain/available-balance';
@@ -67,6 +68,7 @@ function setup() {
       { provide: AccountPort, useValue: accountPort },
       { provide: PendingTransfersPort, useValue: pendingPort },
       { provide: TransactionPort, useValue: transactionPort },
+      { provide: NewTransactionLauncher, useValue: { open: async () => ({ created: false }) } },
     ],
   });
   return { accountPort, pendingPort, transactionPort };

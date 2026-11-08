@@ -1,0 +1,2 @@
+﻿STATUS: 400
+{"errors":[{"field":"description","message":"description must be at most 500 characters"}]}

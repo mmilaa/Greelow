@@ -1,0 +1,94 @@
+<h2 mat-dialog-title id="new-tx-title">{{ titleText }}</h2>
+
+<mat-dialog-content>
+  <p class="dialog-account">
+    <span class="dialog-account__name">{{ account.name }}</span>
+    <span class="dialog-account__meta">{{ account.currency }} · {{ account.id }}</span>
+  </p>
+
+  <form class="dialog-form" [formGroup]="form" (ngSubmit)="submit()" novalidate>
+    @if (submitError(); as message) {
+      <p class="dialog-error" role="alert">
+        {{ message }}
+        @if (uncertain()) {
+          <button type="button" class="dialog-error__link" (click)="goToTransactions()">
+            Ver movimientos de la cuenta
+          </button>
+        }
+      </p>
+    }
+
+    <mat-form-field appearance="outline" class="dialog-field dialog-field--amount" #field>
+      <mat-label>Monto ({{ account.currency }})</mat-label>
+      <input
+        matInput
+        type="text"
+        inputmode="decimal"
+        formControlName="amount"
+        cdkFocusInitial
+        autocomplete="off"
+        [aria-describedby]="preview() ? 'amount-preview' : ''"
+      />
+      <mat-hint>Usá coma o punto para los centavos, sin separador de miles.</mat-hint>
+      <mat-error>{{ amountErrorText() }}</mat-error>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="dialog-field" #field>
+      <mat-label>Categoría (opcional)</mat-label>
+      <mat-select formControlName="category" [disabled]="categoriesDisabled()">
+        <mat-option value="">Sin categoría</mat-option>
+        @for (cat of categoryOptions(); track cat) {
+          <mat-option [value]="cat">{{ categoryLabelOf(cat) }}</mat-option>
+        }
+      </mat-select>
+      @if (categoriesDisabled()) {
+        <mat-hint>No pudimos cargar las categorías.</mat-hint>
+      }
+      @if (form.controls.category.hasError('server')) {
+        <mat-error>Revisá la categoría.</mat-error>
+      }
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="dialog-field" #field>
+      <mat-label>Descripción (opcional)</mat-label>
+      <input matInput type="text" formControlName="description" maxlength="500" autocomplete="off" />
+      @if (form.controls.description.hasError('maxlength')) {
+        <mat-error>La descripción admite como máximo 500 caracteres.</mat-error>
+      }
+      @if (form.controls.description.hasError('server')) {
+        <mat-error>Revisá la descripción.</mat-error>
+      }
+    </mat-form-field>
+
+    <!-- Summary of what will be registered, kept apart from the fields and just
+         above the actions. -->
+    @if (negativeWarning()) {
+      <p class="dialog-warning" role="status">
+        Este gasto deja la cuenta en negativo y no vas a poder transferir desde ella hasta cubrir
+        el saldo.
+      </p>
+    }
+    @if (preview(); as text) {
+      <p id="amount-preview" class="dialog-preview">{{ text }}</p>
+    }
+  </form>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-button type="button" (click)="cancel()" [disabled]="submitting()">Cancelar</button>
+  <button
+    mat-flat-button
+    color="primary"
+    type="button"
+    class="dialog-submit"
+    [attr.aria-label]="submitting() ? 'Registrando…' : null"
+    (click)="submit()"
+    [disabled]="submitting()"
+    [disabledInteractive]="true"
+  >
+    Registrar
+    @if (submitting()) {
+      <mat-progress-spinner mode="indeterminate" diameter="20" aria-hidden="true" />
+    }
+  </button>
+</mat-dialog-actions>

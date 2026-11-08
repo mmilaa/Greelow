@@ -11,6 +11,7 @@ import { AccountPort } from './shared/application/account.port';
 import { PendingTransfersPort } from './shared/application/pending-transfers.port';
 import { TransactionPort } from './shared/application/transaction.port';
 import { CategoryPort } from './features/transactions/application/category.port';
+import { NewTransactionLauncher } from './shared/ui/new-transaction-launcher';
 import { SessionStore } from './features/auth/application/session.store';
 import { ApiErrorException } from './shared/domain/map-api-error';
 
@@ -60,6 +61,7 @@ function setup(initialToken: string | null, configure?: (auth: FakeAuth) => void
       { provide: PendingTransfersPort, useValue: { pendingOutgoing: async () => [] } },
       { provide: TransactionPort, useValue: { list: async () => ({ items: [], page: 1, pageSize: 5, total: 0, totalPages: 0 }), create: async () => ({}) } },
       { provide: CategoryPort, useValue: { list: async () => [] } },
+      { provide: NewTransactionLauncher, useValue: { open: async () => ({ created: false }) } },
     ],
   });
   // Activate the expiry/logout redirect effect (normally hosted by App).

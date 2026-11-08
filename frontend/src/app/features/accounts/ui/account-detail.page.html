@@ -32,6 +32,28 @@
         </article>
 
         <nav class="detail__actions" aria-label="Acciones de la cuenta">
+          <button
+            mat-stroked-button
+            type="button"
+            aria-haspopup="dialog"
+            [disabled]="opening()"
+            [disabledInteractive]="true"
+            (click)="registerTransaction(view.row, 'income')"
+          >
+            <mat-icon aria-hidden="true">add</mat-icon>
+            Registrar ingreso
+          </button>
+          <button
+            mat-stroked-button
+            type="button"
+            aria-haspopup="dialog"
+            [disabled]="opening()"
+            [disabledInteractive]="true"
+            (click)="registerTransaction(view.row, 'expense')"
+          >
+            <mat-icon aria-hidden="true">remove</mat-icon>
+            Registrar gasto
+          </button>
           <a
             mat-stroked-button
             [routerLink]="transferLink()"
@@ -41,6 +63,12 @@
             Transferir
           </a>
         </nav>
+
+        @if (launchError()) {
+          <p class="detail__launch-error" role="alert">
+            No pudimos abrir el formulario. Reintentá.
+          </p>
+        }
 
         <section class="detail__transactions" aria-labelledby="transactions-heading">
           <header class="detail__transactions-header">

@@ -77,6 +77,21 @@ export class AccountDetailStore {
     void this.loadTransactions(id);
   }
 
+  /**
+   * Reloads the detail after a change (e.g. a new transaction was registered):
+   * refreshes the shared accounts list (so the balance updates) and re-fetches
+   * the recent transactions under the generation guard. No-op if no account is
+   * set yet.
+   */
+  reload(): void {
+    const id = this.accountId();
+    if (id === null) {
+      return;
+    }
+    void this.accountsStore.refresh();
+    void this.loadTransactions(id);
+  }
+
   /** Retries only the transactions section (does not reload the account). */
   retryTransactions(): void {
     const id = this.accountId();

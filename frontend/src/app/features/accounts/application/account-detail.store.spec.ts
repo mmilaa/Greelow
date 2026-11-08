@@ -186,6 +186,63 @@ describe('AccountDetailStore', () => {
     });
   });
 
+  describe('reload', () => {
+    it('refreshes the accounts list and re-fetches the transactions', async () => {
+      const { store, transactions, accountsStore } = setup();
+      accountsStore.stateSig.set({ status: 'ready', rows: [row('acc-1')], pendingAvailable: true, stale: false });
+      transactions.listResult = [txn('t1')];
+      store.setAccountId('acc-1');
+      await vi.waitFor(() => expect(store.transactionsState().status).toBe('ready'));
+      accountsStore.refresh.mockClear();
+
+      transactions.listResult = [txn('t2'), txn('t3')];
+      store.reload();
+      await vi.waitFor(() => {
+        const s = store.transactionsState();
+        return s.status === 'ready' && s.items.length === 2;
+      });
+      expect(accountsStore.refresh).toHaveBeenCalledTimes(1);
+      const s = store.transactionsState();
+      if (s.status !== 'ready') throw new Error('expected ready');
+      expect(s.items.map((t) => t.id)).toEqual(['t2', 't3']);
+    });
+
+    it('is a no-op when no account is set', () => {
+      const { store, accountsStore } = setup();
+      store.reload();
+      expect(accountsStore.refresh).not.toHaveBeenCalled();
+    });
+
+    it('a slow reload response does not overwrite a newer navigation (generation)', async () => {
+      const { store, transactions, accountsStore } = setup();
+      accountsStore.stateSig.set({ status: 'ready', rows: [row('acc-1')], pendingAvailable: true, stale: false });
+      transactions.listResult = [txn('t1')];
+      store.setAccountId('acc-1');
+      await vi.waitFor(() => expect(store.transactionsState().status).toBe('ready'));
+
+      // reload starts a slow transactions fetch...
+      let resolveSlow!: (v: { items: Transaction[] }) => void;
+      transactions.listImpl = () => new Promise((r) => (resolveSlow = r));
+      store.reload();
+      await vi.waitFor(() => expect(resolveSlow).toBeTypeOf('function'));
+
+      // ...but a navigation to another account happens first and resolves.
+      transactions.listImpl = null;
+      transactions.listResult = [txn('new')];
+      store.setAccountId('acc-2');
+      await vi.waitFor(() => {
+        const s = store.transactionsState();
+        return s.status === 'ready' && s.items[0]?.id === 'new';
+      });
+
+      // The slow reload now resolves: it must be discarded.
+      resolveSlow({ items: [txn('stale')] });
+      const s = store.transactionsState();
+      if (s.status !== 'ready') throw new Error('expected ready');
+      expect(s.items[0].id).toBe('new');
+    });
+  });
+
   describe('ensureLoaded on entering', () => {
     it('loads the list when it is not ready yet (no double load)', () => {
       const { store, accountsStore } = setup(); // list starts in 'loading'

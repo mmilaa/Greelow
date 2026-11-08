@@ -1,0 +1,16 @@
+﻿{
+    "transaction":  {
+                        "id":  "txn-1794087182260",
+                        "accountId":  "acc-1",
+                        "type":  "income",
+                        "direction":  null,
+                        "amount":  10,
+                        "currency":  "ARS",
+                        "category":  "transfer",
+                        "description":  "categoria transfer",
+                        "status":  "completed",
+                        "counterpartAccountId":  null,
+                        "transferId":  null,
+                        "createdAt":  "2026-11-07T21:33:02.260Z"
+                    }
+}

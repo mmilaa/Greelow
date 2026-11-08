@@ -2,6 +2,7 @@ import { ChangeDetectionStrategy, Component, computed, inject, OnInit } from '@a
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatDialog } from '@angular/material/dialog';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { AccountsStore } from '../../../shared/application/accounts.store';
@@ -17,6 +18,7 @@ import { StatePanelComponent } from '../../../shared/ui/state-panel.component';
     MatButtonModule,
     MatIconModule,
     MatTooltipModule,
+    MatProgressSpinnerModule,
     AccountCardComponent,
     PageHeaderComponent,
     StatePanelComponent,
@@ -41,6 +43,11 @@ export class AccountsPage implements OnInit {
   }
 
   refresh(): void {
+    // disabledInteractive does not cancel the click on a <button>, so guard
+    // against a second refresh while one is already in flight.
+    if (this.refreshing()) {
+      return;
+    }
     void this.store.refresh();
   }
 

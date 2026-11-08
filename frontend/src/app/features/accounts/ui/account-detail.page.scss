@@ -30,6 +30,11 @@
   margin: var(--space-4) 0;
 }
 
+.detail__launch-error {
+  margin: 0 0 var(--space-3);
+  color: var(--color-negative);
+}
+
 .detail__transactions {
   margin-top: var(--space-6);
 }

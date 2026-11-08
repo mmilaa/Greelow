@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, effect, inject, untracked } from '@angular/core';
+import { ChangeDetectionStrategy, Component, effect, inject, signal, untracked } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { map } from 'rxjs';
@@ -9,6 +9,8 @@ import { AccountDetailStore } from '../application/account-detail.store';
 import { AccountSummaryComponent } from './account-summary.component';
 import { TransactionRowComponent } from '../../../shared/ui/transaction-row.component';
 import { StatePanelComponent } from '../../../shared/ui/state-panel.component';
+import { NewTransactionLauncher } from '../../../shared/ui/new-transaction-launcher';
+import { type AccountRow } from '../../../shared/application/accounts.store';
 
 @Component({
   selector: 'app-account-detail',
@@ -29,6 +31,7 @@ export class AccountDetailPage {
   private readonly route = inject(ActivatedRoute);
   private readonly store = inject(AccountDetailStore);
   private readonly title = inject(Title);
+  private readonly launcher = inject(NewTransactionLauncher);
 
   /** The route :id as a signal; changes when navigating between accounts. */
   private readonly id = toSignal(
@@ -38,6 +41,11 @@ export class AccountDetailPage {
 
   readonly account = this.store.account;
   readonly transactionsState = this.store.transactionsState;
+
+  /** True while the register dialog is opening (disables the buttons). */
+  readonly opening = signal(false);
+  /** Set when the dialog chunk failed to load; shown as an accessible notice. */
+  readonly launchError = signal(false);
 
   constructor() {
     // Point the store at the current id whenever it changes (also on first load).
@@ -60,6 +68,29 @@ export class AccountDetailPage {
 
   transferLink(): unknown[] {
     return ['/transfers'];
+  }
+
+  /** Opens the register-income/expense dialog; reloads the detail if created. */
+  async registerTransaction(row: AccountRow, type: 'income' | 'expense'): Promise<void> {
+    // Material's disabledInteractive does NOT cancel the click on a <button>
+    // (only on anchors), so guard against a second open while one is opening.
+    if (this.opening()) {
+      return;
+    }
+    this.launchError.set(false);
+    this.opening.set(true);
+    try {
+      const { created } = await this.launcher.open({ row, type });
+      if (created) {
+        this.store.reload();
+      }
+    } catch {
+      // The dialog chunk failed to load: show an accessible, retryable notice
+      // instead of leaving an unhandled rejection.
+      this.launchError.set(true);
+    } finally {
+      this.opening.set(false);
+    }
   }
 
   retryAccount(): void {
