@@ -73,7 +73,7 @@ function setup(listState: AccountsState, routeId: string | null) {
   return { fixture, accountsStore, launcher, detailStore, title: TestBed.inject(Title) };
 }
 
-const readyWith = (r: AccountRow): AccountsState => ({ status: 'ready', rows: [r], pendingAvailable: true, stale: false });
+const readyWith = (r: AccountRow): AccountsState => ({ status: 'ready', rows: [r], pendingAvailable: true, pendings: [], stale: false });
 
 describe('AccountDetailPage', () => {
   beforeEach(() => TestBed.resetTestingModule());

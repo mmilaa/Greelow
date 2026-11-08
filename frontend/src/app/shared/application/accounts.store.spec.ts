@@ -82,6 +82,31 @@ describe('AccountsStore', () => {
     expect(s.rows[0].available!.equals(Money.fromDecimal(700, 'ARS'))).toBe(true);
   });
 
+  it('exposes the raw pendings from the same read when pending is available', async () => {
+    const { store, accounts, pending } = setup();
+    accounts.listResult = [account('acc-1', 1000)];
+    pending.result = [pendingOut('acc-1', 300)];
+    await store.load();
+    const s = store.state();
+    if (s.status !== 'ready') throw new Error('expected ready');
+    // The transfer validation feeds canTransfer with exactly this array.
+    expect(s.pendings).toHaveLength(1);
+    expect(s.pendings[0].accountId).toBe('acc-1');
+    expect(s.pendings[0].amount.equals(Money.fromDecimal(300, 'ARS'))).toBe(true);
+  });
+
+  it('exposes an empty pendings array when pending could not be read', async () => {
+    const { store, accounts, pending } = setup();
+    accounts.listResult = [account('acc-1', 1000)];
+    pending.error = new Error('pending down');
+    await store.load();
+    const s = store.state();
+    if (s.status !== 'ready') throw new Error('expected ready');
+    expect(s.pendingAvailable).toBe(false);
+    // Empty, never a partial/unknown list mistaken for "none pending".
+    expect(s.pendings).toEqual([]);
+  });
+
   it('incoming and non-pending transfers do not reduce the available', async () => {
     const { store, accounts, pending } = setup();
     accounts.listResult = [account('acc-1', 1000)];
@@ -232,6 +257,32 @@ describe('AccountsStore', () => {
       const s = store.state();
       if (s.status !== 'ready') throw new Error('expected ready');
       expect(s.rows[0].account.id).toBe('acc-new');
+    });
+
+    it('dataGeneration does not advance for a superseded read', async () => {
+      const { store, accounts, pending } = setup();
+      accounts.listResult = [account('acc-1', 1000)];
+      await store.load();
+      const genAfterLoad = store.dataGeneration();
+
+      // A slow refresh that we supersede before it resolves.
+      let resolveSlow!: (v: AccountTransaction[]) => void;
+      vi.spyOn(pending, 'pendingOutgoing').mockImplementationOnce(
+        () => new Promise<AccountTransaction[]>((r) => (resolveSlow = r)),
+      );
+      const slow = store.refresh();
+
+      // A newer refresh starts and finishes first (supersedes the slow one).
+      accounts.listResult = [account('acc-1', 2000)];
+      await store.refresh();
+      const genAfterNewer = store.dataGeneration();
+      expect(genAfterNewer).toBeGreaterThan(genAfterLoad);
+
+      // The slow (superseded) read resolves now: it must NOT advance the
+      // applied-data generation, since it did not write the state.
+      resolveSlow([]);
+      await slow;
+      expect(store.dataGeneration()).toBe(genAfterNewer);
     });
 
     it('a stale FAILING response does not overwrite a newer good one (case F)', async () => {

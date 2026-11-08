@@ -1,0 +1,34 @@
+﻿{
+    "transfer":  {
+                     "id":  "transfer-1794099319228",
+                     "status":  "completed",
+                     "from":  {
+                                  "id":  "transfer-1794099319228-out",
+                                  "accountId":  "acc-1",
+                                  "type":  "transfer",
+                                  "direction":  "out",
+                                  "amount":  100,
+                                  "currency":  "ARS",
+                                  "category":  "transfer",
+                                  "description":  "entre propias",
+                                  "status":  "completed",
+                                  "counterpartAccountId":  "acc-1794099319199",
+                                  "transferId":  "transfer-1794099319228",
+                                  "createdAt":  "2026-11-08T00:55:19.228Z"
+                              },
+                     "to":  {
+                                "id":  "transfer-1794099319228-in",
+                                "accountId":  "acc-1794099319199",
+                                "type":  "transfer",
+                                "direction":  "in",
+                                "amount":  100,
+                                "currency":  "ARS",
+                                "category":  "transfer",
+                                "description":  "entre propias",
+                                "status":  "completed",
+                                "counterpartAccountId":  "acc-1",
+                                "transferId":  "transfer-1794099319228",
+                                "createdAt":  "2026-11-08T00:55:19.228Z"
+                            }
+                 }
+}

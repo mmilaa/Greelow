@@ -850,3 +850,92 @@ los mappers (salvo el test de caracterización) y no se importó entre features.
 
 **Decisión:** ✅ aceptado con modificaciones
 **Por qué:** Acepté la implementación con algunos ajustes porque pude mantener el alta desacoplada de accounts y evitar que el diálogo aumentara el bundle inicial. También revisé la validación del monto y los casos de doble clic, errores y cierre durante el envío, para asegurarme de que el usuario siempre reciba una respuesta clara.
+## #23 · Lógica de transferencias (store y tracker, sin pantalla)
+**Herramienta:** Kiro
+
+**Prompt:** (resumen) Diseño e implementación de la lógica de transferencias SIN pantalla
+(la pantalla queda para después), reusando lo que ya existe: transfer-policy (canTransfer,
+availableBalance), settlement (nextSettlementStep, DEFAULT_SETTLEMENT_CONFIG), TransferPort,
+PendingTransfersPort, AccountPort, AccountsStore, toCreateTransferBody,
+mapApiError('create-transfer'), uncertainResultMessage y parseAmountInput. Pocas piezas: un
+TransferStore y un tracker, sin capas extra, sin RxJS. Pedí leer antes el steering y los samples
+04, 05, 06, 08, 11 a 15 y 43 a 46, y proponer sin escribir código. Después vinieron las
+respuestas a las decisiones (con dos correcciones mías), cuatro verificaciones puntuales y el
+cierre.
+
+### Decisiones que tomé yo (elegí entre las alternativas que me propuso Kiro)
+- **Dos piezas, no más:** TransferStore (features/transfers/application) con la máquina de
+  estados (idle con lastError tipado, validating, blocked con reason+available, submitting,
+  tracking con attempt, confirmed, failed, unconfirmed, uncertain con kind/verifying/
+  verification) y TransferTracker (los timers con setTimeout, no setInterval). El catálogo de
+  textos va en features/transfers/ui (no en shared/ui): TransferBlockReason es de la feature y
+  shared no importa features; en shared/ui quedan solo los reutilizables (uncertainResultMessage
+  con el sustantivo, errorMessage, formatMoney).
+- **Una sola acción pública submit(request):** guard síncrono (si no está idle, vuelve), luego
+  validating, lectura fresca, canTransfer, submitting y create. Sin validate()/submit() separados.
+- **Lectura fresca sin duplicar el AccountsStore:** reuso AccountsStore.refresh() (pendientes
+  primero, cuentas después, en secuencia) y expongo desde ese store, en el estado ready, el array
+  crudo de pendientes de la MISMA lectura, junto con pendingAvailable. Único cambio permitido al
+  AccountsStore, con sus tests. Así canTransfer sigue siendo la única autoridad de fondos y el
+  disponible de la tarjeta y el de la validación salen de la misma lectura. Si tras refresh el
+  estado quedó en error/stale, o pendingAvailable es false, o la fila no está o su available es
+  null, bloqueo con 'available-unknown' (no transfiere, hay mensaje y reintento).
+- **Monto ya parseado:** el store recibe Money (el formulario lo valida con su ValidatorFn, como
+  el diálogo de alta); no parsea texto ni tiene bloqueo de formato.
+- **Errores conocidos al crear (400/404/422/401):** vuelve a idle con lastError TIPADO (el
+  ApiError), no texto en español; el texto lo arma la UI con el catálogo. El 401 no es incierto
+  (el servidor lo rechazó): sin seguimiento ni reintento, la sesión expira y redirige sola.
+- **Seguimiento:** el primer GET /transfers/:id va después del primer intervalo (el POST ya dice
+  pending); cada consulta alimenta nextSettlementStep; un error de consulta (red/5xx/invalid) es
+  'unknown' (no falla la transferencia); un unauthenticated corta. Los timers viven en el tracker
+  y se prueban con vi.useFakeTimers(); se cancelan al destruir la pantalla (DestroyRef). Agotados
+  los 6 intentos queda 'unconfirmed' con "Verificar de nuevo", que corre UNA consulta inmediata
+  (no un ciclo nuevo), con guard contra clics repetidos.
+- **Refresco del AccountsStore una vez** al llegar a confirmed o failed (en failed la pendiente
+  desaparece y cambia el disponible); en unconfirmed no.
+- **Bloqueo por cuenta de origen:** una transferencia en seguimiento desde A bloquea nuevos
+  envíos desde A, no desde B (una señal por cuenta en el store).
+- **Resultado de crear que no se conoce:** (a) error de red (puede haberse creado o no) ->
+  uncertain, lectura de verificación y recién al terminar se habilita "Intentar de nuevo", aun si
+  la verificación falló (con aviso); (b) 2xx con cuerpo ilegible (invalid-response) -> el servidor
+  la aceptó, así que reintentar duplicaría: NO se ofrece "Intentar de nuevo", solo "Ver cuenta" y
+  "Hacer otra transferencia". La verificación lee los pendientes (filtrados por la cuenta de origen
+  en el cliente, porque pendingOutgoing no recibe accountId) y las últimas 5 transferencias
+  (TransactionPort.list type transfer, filtrando direction 'out'); se muestra la lista, sin buscar
+  coincidencias automáticas.
+- **Dos correcciones mías al plan inicial:** que invalid-response no ofrezca reintento (lo de
+  arriba) y que el catálogo de textos viva en la feature y no en shared.
+
+### La verificación del conteo (prompt aparte)
+Noté que mi resumen de tests no cerraba. Lo verifiqué con el reporter JSON del runner, con
+git stash -u para el "antes": los specs de transfers no existían (0) y accounts.store.spec pasó
+de 23 a 26. Mi resumen previo decía "transfer-messages 8" cuando eran 6: error al escribir el
+resumen, no en el código.
+
+### La lectura fresca pisada (hallazgo del punto 2, con evidencia)
+Al revisar, encontré un agujero real: AccountsStore tiene un contador de generación y, cuando una
+corrida es pisada por otra más nueva, su await termina pero NO toca el estado, dejando los datos
+viejos hasta que la nueva termina; submit los leería como frescos. Lo corregí con un cambio
+mínimo en AccountsStore: una señal dataGeneration que solo avanza cuando la corrida de esa
+generación escribe el estado. submit captura dataGeneration() antes del refresh y exige que avance;
+si fue pisada reintenta la lectura una vez, y si sigue sin aplicarse bloquea con 'available-unknown'.
+Nunca valida con datos anteriores a su lectura. Con promesas controladas: una lectura pisada no se
+usa para validar.
+
+### Verificación de la verificación (punto 3) y archivos huérfanos (punto 4)
+Confirmé por nombre de test: (a) outgoingPending filtrado por la cuenta de origen; (b)
+recentOutgoing solo direction out; (c) si falla la lectura de PENDIENTES (no solo la de
+transacciones) readFailed es true y la salida se habilita igual; (d) cancelar durante la
+verificación no la resucita; (e) una confirmación en "Verificar de nuevo" refresca el AccountsStore
+una vez. Lo que faltaba lo agregué. git status confirmó que no quedó ningún archivo sin usar (no
+existe transfer-outcome.ts); los nuevos son las 3 piezas de código y sus 3 specs.
+
+**Resultado:** TransferStore + TransferTracker + el catálogo de textos de la feature; único cambio
+al AccountsStore (la señal dataGeneration y el array pendings en ready), con sus tests. De 487 a
+535 tests (transfer.store 26, transfer-tracker 12, transfer-integration 1, transfer-messages 6, y
++3 en accounts.store.spec: pendings y la generación pisada), ng build OK. transfers.page.ts sigue
+como placeholder. No se tocó transfer-policy ni settlement, sin dependencias nuevas ni imports
+entre features.
+
+**Decisión:** ✅ aceptado con modificaciones
+**Por qué:** Acepté la implementación con modificaciones porque pude reutilizar la lógica de dominio y el store de cuentas sin duplicar responsabilidades. Me pareció especialmente importante corregir el problema de las lecturas pisadas, para asegurarme de que una transferencia nunca se valide con un saldo desactualizado. También revisé los casos de error, seguimiento y reintento para evitar transferencias duplicadas.

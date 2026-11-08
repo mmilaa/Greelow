@@ -23,6 +23,13 @@ export type AccountsState =
       rows: AccountRow[];
       /** False when pending transfers could not be read (show ledger balance + notice). */
       pendingAvailable: boolean;
+      /**
+       * The raw outgoing pending transfers from the SAME read that built the
+       * rows, so a consumer (the transfer validation) can feed canTransfer with
+       * exactly the data the available balance was computed from. Empty when
+       * pendingAvailable is false (they could not be read).
+       */
+      pendings: AccountTransaction[];
       /** True when a refresh failed and the shown data may be out of date. */
       stale: boolean;
     };
@@ -44,9 +51,22 @@ export class AccountsStore {
   private readonly refreshingSig = signal(false);
   private generation = 0;
 
+  /**
+   * The generation whose read actually produced the current state. A load that
+   * is superseded by a newer one returns without touching the state, so this
+   * signal does NOT advance for it. A consumer that triggers a fresh read (the
+   * transfer validation) can capture this before the read and confirm it moved
+   * past that value afterward; if it did not, the shown data is older than the
+   * read it asked for and must not be trusted as fresh.
+   */
+  private readonly dataGenerationSig = signal(0);
+
   readonly state = this.stateSig.asReadonly();
   readonly refreshing = this.refreshingSig.asReadonly();
   readonly isReady = computed(() => this.stateSig().status === 'ready');
+
+  /** Generation of the read that produced the current state (see dataGenerationSig). */
+  readonly dataGeneration = this.dataGenerationSig.asReadonly();
 
   /** Whether there is data currently shown (ready state). */
   private hasData(): boolean {
@@ -142,6 +162,7 @@ export class AccountsStore {
       } else {
         this.stateSig.set({ status: 'error' });
       }
+      this.dataGenerationSig.set(gen);
       this.stopRefreshing(gen);
       return;
     }
@@ -149,13 +170,23 @@ export class AccountsStore {
 
     if (accounts.length === 0) {
       this.stateSig.set({ status: 'empty' });
+      this.dataGenerationSig.set(gen);
       this.stopRefreshing(gen);
       return;
     }
 
     // Build all rows at once from the SAME read (never mix reads).
     const rows = accounts.map((account) => this.toRow(account, pendings, pendingOk));
-    this.stateSig.set({ status: 'ready', rows, pendingAvailable: pendingOk, stale: false });
+    this.stateSig.set({
+      status: 'ready',
+      rows,
+      pendingAvailable: pendingOk,
+      // Expose the raw pendings only when they were actually read; otherwise an
+      // empty array, so no consumer mistakes "unknown" for "none pending".
+      pendings: pendingOk ? pendings : [],
+      stale: false,
+    });
+    this.dataGenerationSig.set(gen);
     this.stopRefreshing(gen);
   }
 

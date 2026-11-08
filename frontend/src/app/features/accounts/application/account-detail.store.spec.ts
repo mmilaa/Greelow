@@ -82,7 +82,7 @@ describe('AccountDetailStore', () => {
 
     it('is not-found when the list loaded but the id is absent', () => {
       const { store, accountsStore } = setup();
-      accountsStore.stateSig.set({ status: 'ready', rows: [row('acc-2')], pendingAvailable: true, stale: false });
+      accountsStore.stateSig.set({ status: 'ready', rows: [row('acc-2')], pendingAvailable: true, pendings: [], stale: false });
       store.setAccountId('acc-1');
       expect(store.account().kind).toBe('not-found');
     });
@@ -96,7 +96,7 @@ describe('AccountDetailStore', () => {
 
     it('is found when the id is in the list', () => {
       const { store, accountsStore } = setup();
-      accountsStore.stateSig.set({ status: 'ready', rows: [row('acc-1')], pendingAvailable: true, stale: false });
+      accountsStore.stateSig.set({ status: 'ready', rows: [row('acc-1')], pendingAvailable: true, pendings: [], stale: false });
       store.setAccountId('acc-1');
       const v = store.account();
       expect(v.kind).toBe('found');
@@ -189,7 +189,7 @@ describe('AccountDetailStore', () => {
   describe('reload', () => {
     it('refreshes the accounts list and re-fetches the transactions', async () => {
       const { store, transactions, accountsStore } = setup();
-      accountsStore.stateSig.set({ status: 'ready', rows: [row('acc-1')], pendingAvailable: true, stale: false });
+      accountsStore.stateSig.set({ status: 'ready', rows: [row('acc-1')], pendingAvailable: true, pendings: [], stale: false });
       transactions.listResult = [txn('t1')];
       store.setAccountId('acc-1');
       await vi.waitFor(() => expect(store.transactionsState().status).toBe('ready'));
@@ -215,7 +215,7 @@ describe('AccountDetailStore', () => {
 
     it('a slow reload response does not overwrite a newer navigation (generation)', async () => {
       const { store, transactions, accountsStore } = setup();
-      accountsStore.stateSig.set({ status: 'ready', rows: [row('acc-1')], pendingAvailable: true, stale: false });
+      accountsStore.stateSig.set({ status: 'ready', rows: [row('acc-1')], pendingAvailable: true, pendings: [], stale: false });
       transactions.listResult = [txn('t1')];
       store.setAccountId('acc-1');
       await vi.waitFor(() => expect(store.transactionsState().status).toBe('ready'));
@@ -253,7 +253,7 @@ describe('AccountDetailStore', () => {
 
     it('refreshes the list when it is already loaded (keeps the balance fresh)', () => {
       const { store, accountsStore } = setup();
-      accountsStore.stateSig.set({ status: 'ready', rows: [row('acc-1')], pendingAvailable: true, stale: false });
+      accountsStore.stateSig.set({ status: 'ready', rows: [row('acc-1')], pendingAvailable: true, pendings: [], stale: false });
       store.setAccountId('acc-1');
       expect(accountsStore.refresh).toHaveBeenCalled();
       expect(accountsStore.ensureLoaded).not.toHaveBeenCalled();
