@@ -45,6 +45,12 @@ export interface ExpenseSummary {
 export interface SummarizeOptions {
   currency: Currency;
   period: Period;
+  /**
+   * Restrict to a single account. When omitted (or null), every account of the
+   * chosen currency is included. An account has one currency, so filtering by
+   * account never risks mixing currencies.
+   */
+  accountId?: string | null;
   /** The browser's time zone, used to place each expense in a calendar month. */
   timeZone: string;
   /**
@@ -52,6 +58,12 @@ export interface SummarizeOptions {
    * The domain cannot import from shared/ui, so the label comes in as a param.
    */
   labelOf: (category: string) => string;
+}
+
+/** An account that appears in the spent expenses, with its (single) currency. */
+export interface AccountWithData {
+  accountId: string;
+  currency: Currency;
 }
 
 /** True for a spent expense: type 'expense' and status 'completed'. */
@@ -101,19 +113,38 @@ export function currenciesWithData(transactions: readonly Transaction[]): Curren
 }
 
 /**
- * The months (for a currency) that have at least one spent expense, as "YYYY-MM"
- * keys, from the most recent to the oldest. Months come from the data, computed
- * in the given time zone.
+ * The accounts that appear in the spent expenses, in first-seen order, each with
+ * its single currency. Lets the UI build an account selector without a separate
+ * read: the accounts are derived from the expenses themselves.
+ */
+export function accountsWithData(transactions: readonly Transaction[]): AccountWithData[] {
+  const seen: AccountWithData[] = [];
+  const ids = new Set<string>();
+  for (const tx of transactions) {
+    if (!isSpentExpense(tx)) continue;
+    if (ids.has(tx.accountId)) continue;
+    ids.add(tx.accountId);
+    seen.push({ accountId: tx.accountId, currency: tx.amount.currency });
+  }
+  return seen;
+}
+
+/**
+ * The months (for a currency, optionally a single account) that have at least
+ * one spent expense, as "YYYY-MM" keys, from the most recent to the oldest.
+ * Months come from the data, computed in the given time zone.
  */
 export function monthsWithData(
   transactions: readonly Transaction[],
   currency: Currency,
   timeZone: string,
+  accountId?: string | null,
 ): MonthKey[] {
   const seen = new Set<MonthKey>();
   for (const tx of transactions) {
     if (!isSpentExpense(tx)) continue;
     if (tx.amount.currency !== currency) continue;
+    if (accountId != null && tx.accountId !== accountId) continue;
     seen.add(monthKeyOf(tx.createdAt, timeZone));
   }
   // Lexicographic order on "YYYY-MM" is chronological; reverse for newest first.
@@ -121,14 +152,15 @@ export function monthsWithData(
 }
 
 /**
- * Summarizes the spent expenses of ONE currency for a period. Filters again by
- * type/status/currency/period, groups by category, sums with Money.plus (exact
- * minor units), and sorts by amount descending, breaking ties by the Spanish
- * label (so the order is stable and reads naturally). Never mixes currencies.
+ * Summarizes the spent expenses of ONE currency for a period, optionally of a
+ * single account. Filters again by type/status/currency/account/period, groups
+ * by category, sums with Money.plus (exact minor units), and sorts by amount
+ * descending, breaking ties by the Spanish label (so the order is stable and
+ * reads naturally). Never mixes currencies.
  */
 export function summarizeExpenses(
   transactions: readonly Transaction[],
-  { currency, period, timeZone, labelOf }: SummarizeOptions,
+  { currency, period, accountId, timeZone, labelOf }: SummarizeOptions,
 ): ExpenseSummary {
   const byCategory = new Map<string, { total: Money; count: number }>();
   let total = Money.zero(currency);
@@ -136,6 +168,7 @@ export function summarizeExpenses(
   for (const tx of transactions) {
     if (!isSpentExpense(tx)) continue;
     if (tx.amount.currency !== currency) continue;
+    if (accountId != null && tx.accountId !== accountId) continue;
     if (!inPeriod(tx, period, timeZone)) continue;
 
     total = total.plus(tx.amount); // same currency guaranteed above

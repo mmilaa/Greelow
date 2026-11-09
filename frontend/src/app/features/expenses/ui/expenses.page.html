@@ -35,16 +35,32 @@
       } @else {
         <div class="expenses__controls">
           <mat-form-field appearance="outline" class="expenses__field">
-            <mat-label>Moneda</mat-label>
+            <mat-label>Cuenta</mat-label>
             <mat-select
-              [value]="currency()"
-              (selectionChange)="onCurrencyChange($event.value)"
+              [value]="accountValue()"
+              (selectionChange)="onAccountChange($event.value)"
             >
-              @for (c of currencies(); track c) {
-                <mat-option [value]="c">{{ c }}</mat-option>
+              @for (option of accountOptions(); track option.value) {
+                <mat-option [value]="option.value">{{ option.label }}</mat-option>
               }
             </mat-select>
           </mat-form-field>
+
+          <!-- With a single account the currency is implied by it, so the
+               currency selector is hidden (shown only for "Todas las cuentas"). -->
+          @if (!accountChosen()) {
+            <mat-form-field appearance="outline" class="expenses__field">
+              <mat-label>Moneda</mat-label>
+              <mat-select
+                [value]="currency()"
+                (selectionChange)="onCurrencyChange($event.value)"
+              >
+                @for (c of currencies(); track c) {
+                  <mat-option [value]="c">{{ c }}</mat-option>
+                }
+              </mat-select>
+            </mat-form-field>
+          }
 
           <mat-form-field appearance="outline" class="expenses__field">
             <mat-label>Período</mat-label>

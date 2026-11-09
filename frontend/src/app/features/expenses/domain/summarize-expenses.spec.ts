@@ -3,6 +3,7 @@ import {
   summarizeExpenses,
   monthsWithData,
   currenciesWithData,
+  accountsWithData,
   type Period,
 } from './summarize-expenses';
 import { Money } from '../../../shared/domain/money';
@@ -160,6 +161,39 @@ describe('summarizeExpenses', () => {
     expect(summary.total.currency).toBe('ARS');
     expect(summary.categories).toHaveLength(0);
   });
+
+  it('restricts to a single account when accountId is given', () => {
+    const txs = [
+      tx({ amount: Money.fromDecimal(100, 'ARS'), category: 'groceries', accountId: 'acc-1' }),
+      tx({ amount: Money.fromDecimal(300, 'ARS'), category: 'rent', accountId: 'acc-2' }),
+    ];
+    const summary = summarizeExpenses(txs, {
+      currency: 'ARS',
+      period: ALL,
+      accountId: 'acc-1',
+      timeZone: BA,
+      labelOf,
+    });
+    expect(summary.total.amountMinor).toBe(10000);
+    expect(summary.categories).toHaveLength(1);
+    expect(summary.categories[0].category).toBe('groceries');
+  });
+
+  it('includes every account when accountId is null/omitted', () => {
+    const txs = [
+      tx({ amount: Money.fromDecimal(100, 'ARS'), category: 'groceries', accountId: 'acc-1' }),
+      tx({ amount: Money.fromDecimal(300, 'ARS'), category: 'groceries', accountId: 'acc-2' }),
+    ];
+    const summary = summarizeExpenses(txs, {
+      currency: 'ARS',
+      period: ALL,
+      accountId: null,
+      timeZone: BA,
+      labelOf,
+    });
+    expect(summary.total.amountMinor).toBe(40000);
+    expect(summary.categories[0].count).toBe(2);
+  });
 });
 
 describe('currenciesWithData', () => {
@@ -198,5 +232,37 @@ describe('monthsWithData', () => {
     const txs = [expense(1, 'ARS', 'groceries', '2026-10-01T02:00:00Z')];
     expect(monthsWithData(txs, 'ARS', BA)).toEqual(['2026-09']);
     expect(monthsWithData(txs, 'ARS', 'UTC')).toEqual(['2026-10']);
+  });
+
+  it('restricts months to a single account when accountId is given', () => {
+    const txs = [
+      tx({ amount: Money.fromDecimal(1, 'ARS'), category: 'groceries', accountId: 'acc-1', createdAt: '2026-10-10T12:00:00Z' }),
+      tx({ amount: Money.fromDecimal(1, 'ARS'), category: 'groceries', accountId: 'acc-2', createdAt: '2026-08-10T12:00:00Z' }),
+    ];
+    expect(monthsWithData(txs, 'ARS', BA, 'acc-1')).toEqual(['2026-10']);
+  });
+});
+
+describe('accountsWithData', () => {
+  it('lists distinct accounts of spent expenses with their currency, first-seen order', () => {
+    const txs = [
+      tx({ amount: Money.fromDecimal(1, 'USD'), category: 'groceries', accountId: 'acc-2' }),
+      tx({ amount: Money.fromDecimal(1, 'ARS'), category: 'rent', accountId: 'acc-1' }),
+      tx({ amount: Money.fromDecimal(1, 'USD'), category: 'health', accountId: 'acc-2' }),
+    ];
+    expect(accountsWithData(txs)).toEqual([
+      { accountId: 'acc-2', currency: 'USD' },
+      { accountId: 'acc-1', currency: 'ARS' },
+    ]);
+  });
+
+  it('ignores transfers, incomes, pending and failed', () => {
+    const txs = [
+      tx({ amount: Money.fromDecimal(1, 'USD'), type: 'income', category: 'salary', accountId: 'acc-9' }),
+      tx({ amount: Money.fromDecimal(1, 'EUR'), type: 'transfer', direction: 'out', category: 'transfer', accountId: 'acc-9' }),
+      tx({ amount: Money.fromDecimal(1, 'ARS'), status: 'pending', category: 'groceries', accountId: 'acc-9' }),
+      tx({ amount: Money.fromDecimal(1, 'ARS'), category: 'groceries', accountId: 'acc-1' }),
+    ];
+    expect(accountsWithData(txs)).toEqual([{ accountId: 'acc-1', currency: 'ARS' }]);
   });
 });
