@@ -49,6 +49,7 @@ export class ShellComponent {
     { path: '/accounts', label: 'Cuentas' },
     { path: '/transactions', label: 'Movimientos' },
     { path: '/transfers', label: 'Transferencias' },
+    { path: '/expenses', label: 'Gastos' },
   ];
 
   logout(): void {

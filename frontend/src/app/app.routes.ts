@@ -39,6 +39,12 @@ export const routes: Routes = [
         loadComponent: () =>
           import('./features/transfers/ui/transfers.page').then((m) => m.TransfersPage),
       },
+      {
+        path: 'expenses',
+        title: 'Gastos',
+        loadComponent: () =>
+          import('./features/expenses/ui/expenses.page').then((m) => m.ExpensesPage),
+      },
       { path: '', pathMatch: 'full', redirectTo: 'accounts' },
     ],
   },

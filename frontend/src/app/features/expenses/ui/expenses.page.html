@@ -1,0 +1,80 @@
+<section class="expenses">
+  <header class="expenses__header">
+    <h1 class="expenses__title">Gastos</h1>
+    <button
+      mat-stroked-button
+      type="button"
+      class="expenses__refresh"
+      [disabled]="refreshing()"
+      disabledInteractive
+      aria-label="Actualizar gastos"
+      (click)="refresh()"
+    >
+      @if (refreshing()) {
+        <mat-progress-spinner mode="indeterminate" diameter="20" aria-hidden="true" />
+      } @else {
+        <mat-icon aria-hidden="true">refresh</mat-icon>
+      }
+    </button>
+  </header>
+
+  @switch (state().status) {
+    @case ('loading') {
+      <app-state-panel state="loading" loadingText="Cargando gastos…" />
+    }
+    @case ('error') {
+      <app-state-panel
+        state="error"
+        errorText="No pudimos cargar los gastos."
+        (retry)="retry()"
+      />
+    }
+    @case ('ready') {
+      @if (noExpensesAtAll()) {
+        <app-state-panel state="empty" emptyText="Todavía no registraste gastos." />
+      } @else {
+        <div class="expenses__controls">
+          <mat-form-field appearance="outline" class="expenses__field">
+            <mat-label>Moneda</mat-label>
+            <mat-select
+              [value]="currency()"
+              (selectionChange)="onCurrencyChange($event.value)"
+            >
+              @for (c of currencies(); track c) {
+                <mat-option [value]="c">{{ c }}</mat-option>
+              }
+            </mat-select>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="expenses__field">
+            <mat-label>Período</mat-label>
+            <mat-select
+              [value]="periodValue()"
+              (selectionChange)="onPeriodChange($event.value)"
+            >
+              @for (option of periodOptions(); track option.value) {
+                <mat-option [value]="option.value">{{ option.label }}</mat-option>
+              }
+            </mat-select>
+          </mat-form-field>
+        </div>
+
+        <!-- Announces the result whenever the period or currency changes. -->
+        <p class="expenses__sr-only" aria-live="polite">{{ announcement() }}</p>
+
+        @if (summary(); as s) {
+          <div class="expenses__total">
+            <span class="expenses__total-label">Total del período</span>
+            <app-money-amount [amount]="s.total" />
+          </div>
+
+          @if (emptyPeriod()) {
+            <app-state-panel state="empty" emptyText="No hay gastos en este período." />
+          } @else {
+            <app-category-list [categories]="s.categories" [caption]="caption()" />
+          }
+        }
+      }
+    }
+  }
+</section>

@@ -1,0 +1,25 @@
+<table class="categories">
+  <caption class="categories__caption">{{ caption() }}</caption>
+  <thead>
+    <tr>
+      <th scope="col">Categoría</th>
+      <th scope="col" class="categories__amount-col">Monto</th>
+    </tr>
+  </thead>
+  <tbody>
+    @for (row of rows(); track row.category) {
+      <tr>
+        <th scope="row" class="categories__name">
+          {{ row.label }}
+          <!-- Decorative bar: single token colour, meaning lives in the cells. -->
+          <span class="categories__bar" aria-hidden="true">
+            <span class="categories__bar-fill" [style.width]="barWidth(row.share)"></span>
+          </span>
+        </th>
+        <td class="categories__amount">
+          <app-money-amount [amount]="row.total" />
+        </td>
+      </tr>
+    }
+  </tbody>
+</table>

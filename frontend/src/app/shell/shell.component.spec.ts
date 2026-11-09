@@ -39,8 +39,13 @@ describe('ShellComponent', () => {
     expect(session.logout).toHaveBeenCalledTimes(1);
   });
 
-  it('lists the three private navigation links', () => {
+  it('lists the four private navigation links, Gastos after Transferencias', () => {
     const { component } = setup();
-    expect(component.links.map((l) => l.path)).toEqual(['/accounts', '/transactions', '/transfers']);
+    expect(component.links.map((l) => l.path)).toEqual([
+      '/accounts',
+      '/transactions',
+      '/transfers',
+      '/expenses',
+    ]);
   });
 });
