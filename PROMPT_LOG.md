@@ -27,7 +27,7 @@ arquitectura, redacción del steering.
 Los tres archivos de `.kiro/steering/` los redactó la IA en esta conversación.
 
 ## #01 · Lectura del steering por Kiro
-**Herramienta:** Kiro 
+**Herramienta:** Kiro
 
 **Prompt:** Leé el steering de .kiro/steering/ y mock-api/README.md. Todavía no escribas
 código ni modifiques archivos. Confirmame qué entendiste del proyecto, señalame
@@ -41,8 +41,8 @@ pending salientes, factor de decimales de Money, runner de tests, alcance de cue
 
 **Por qué:** La idea es que Kiro entienda el proyecto y encuentre inconsistencias antes de empezar a implementar, como sí las encontró, respondí sus preguntas.
 
-## #02 · Respuestas a Kiro y arranque del dominio 
-**Herramienta:** Kiro 
+## #02 · Respuestas a Kiro y arranque del dominio
+**Herramienta:** Kiro
 
 **Prompt:**
 > Respuestas:
@@ -77,7 +77,6 @@ Casos borde que detectó y NO implementó aún: entradas NaN/Infinity en fromDec
 
 **Decisión:** ✏️ modificado
 **Por qué:** Respetó el alcance de lo pedido. Con respecto a los casos border, acepté agregar los de entradas inválidas y -0 porque me parecían necesarios. Los demás no lo son por ahora.
-
 
 ## #04 · Casos borde de Money (entradas inválidas y -0)
 **Herramienta:** Kiro
@@ -147,6 +146,7 @@ shared/domain. Suite completa 69/69 verde, exit 0.
 
 **Decisión:** ✅ aceptado con modificaciones
 **Por qué:** Revisé los tests generados y los casos borde que mencionó Kiro. Una vez que el test quedó listo con las modificaciones que pedí, le solicité que implementara transfer-policy.
+
 ## #06 · Liquidación de transferencias (pending -> completed) en features/transfers/domain
 **Herramienta:** Kiro
 
@@ -182,6 +182,7 @@ todo de application/infrastructure).
 
 **Decisión:** ✅ aceptado
 **Por qué:** Revisé los casos de prueba, especialmente los límites de intentos y los errores de consulta, para asegurarme de que un problema de red no se confundiera con una transferencia fallida. Como los tests cubrieron los comportamientos esperados y la suite quedó verde, acepté la implementación.
+
 ## #07 · Mapeo central de errores de la API en shared/domain
 **Herramienta:** Kiro
 
@@ -223,6 +224,7 @@ samples de error 07, 08, 09, 13, 14, 15, 17, 18 y 19.
 
 **Decisión:** ✅ aceptado
 **Por qué:** Acepté la implementación porque la clasificación quedó centralizada y contempla los distintos formatos de error sin depender de los mensajes de la API. También me pareció bien separar esa lógica de los mensajes de la UI y de los efectos del interceptor. Revisé los tests y confirmé que los casos contemplados quedaran cubiertos.
+
 ## #08 · DTOs y mappers de la API
 **Herramienta:** Kiro
 
@@ -281,6 +283,7 @@ frontend/src quedó sin resultados. Suite 154/154 verde, exit 0, sin cambios de 
 
 **Decisión:** ✅ aceptado
 **Por qué:** Hice este ajuste para mantener los nombres consistentes en todo el proyecto y evitar mezclar los conceptos de movement y transaction. Revisé que los renombres no cambiaran la lógica y que los tests siguieran pasando.
+
 ## #10 · Puertos y adaptadores HTTP
 **Herramienta:** Kiro
 
@@ -327,6 +330,7 @@ verde, exit 0, y buscar "features/" dentro de core quedó sin resultados.
 
 **Decisión:** ✅ aceptado
 **Por qué:** Acepté los ajustes porque mejoran la separación entre capas y el manejo de errores en casos límite. También se agregaron tests para verificar que el límite de páginas se respete y que core no dependa de ninguna feature.
+
 ## #12 · Autenticación y sesión (diseño, implementación y endurecimiento)
 **Herramienta:** Kiro
 
@@ -373,6 +377,7 @@ integración). Terminó en 206/206 verde, exit 0. No se hicieron pantallas ni na
 
 **Decisión:** ✅ aceptado
 **Por qué:** Acepté la implementación porque separa bien el manejo de sesión del resto de la aplicación y contempla los casos de expiración y rehidratación. También me parecieron importantes los ajustes de seguridad del interceptor y del returnUrl.
+
 ## #13 · Base de la UI: rutas, shell, login y redirección de sesión
 **Herramienta:** Kiro
 
@@ -427,6 +432,7 @@ build OK. No instalé @angular/animations.
 
 **Decisión:** ✅ aceptado
 **Por qué:** Acepté los ajustes porque mejoran la navegación y la experiencia del login. Me pareció importante probar el routing real y verificar que no hubiera llamadas o redirecciones duplicadas. También se agregó el foco inicial en el campo de email.
+
 ## #15 · Base visual: tema, tokens, componentes compartidos y accesibilidad
 **Herramienta:** Kiro
 
@@ -476,6 +482,7 @@ tokens.scss.
 
 **Decisión:** ✅ aceptado con modificaciones
 **Por qué:** Acepté la implementación porque la base visual quedó centralizada y consistente, y los componentes se pueden reutilizar en las distintas pantallas. También revisé el contraste con el script y fui ajustando algunos detalles visuales y de accesibilidad hasta que quedaron como esperaba.
+
 ## #16 · Refactor previo a la pantalla de cuentas (availableBalance y pendientes a shared/core)
 **Herramienta:** Kiro
 
@@ -513,6 +520,7 @@ se movieron). No se escribió la pantalla.
 
 **Decisión:** ✅ aceptado
 **Por qué:** Acepté el refactor porque permite que accounts y transfers compartan la lógica sin depender una de otra. También me pareció bien centralizar la consulta de pendientes y mantener toda la paginación en el adaptador. Revisé que se conservaran los tests y que los cambios no modificaran el comportamiento de las transferencias.
+
 ## #17 · Preparación de la pantalla de cuentas: puerto compartido, reglas de dominio y fechas estrictas
 **Herramienta:** Kiro
 
@@ -551,6 +559,7 @@ stores. El formato es-AR usa reloj de 12 horas (a. m./p. m.), no 24h.
 
 **Decisión:** ✅ aceptado
 **Por qué:** Acepté los cambios porque permiten que accounts use los datos y reglas compartidas sin depender de otra feature. También me pareció importante centralizar el cálculo del signo y el formato de fechas, y validar estas últimas de forma estricta desde que llegan de la API.
+
 ## #18 · Lista de cuentas y crear cuenta
 **Herramienta:** Kiro
 
@@ -599,6 +608,7 @@ sobre overlay, frágil en unit), verificables a mano.
 
 **Decisión:** ✅ aceptado con modificaciones
 **Por qué:** Acepté la implementación porque el store contempla los distintos estados de carga y evita que una respuesta vieja sobrescriba datos más recientes. También revisé los detalles de la tarjeta y del diálogo para que la creación de cuentas sea clara y accesible, incluyendo cómo se muestran los errores y se recupera el foco al cerrar.
+
 ## #19 · Detalle de cuenta
 **Herramienta:** Kiro
 
@@ -645,6 +655,7 @@ helpers de etiquetas, botón volver, y tests (incluido el de integración que bl
 
 **Decisión:** ✅ aceptado
 **Por qué:** Acepté la implementación porque pude reutilizar la tarjeta de cuenta y mantener separados los estados de la cuenta y sus movimientos. También me pareció importante resolver el loop del effect con evidencia y dejar un test de integración que detecte si vuelven a dispararse llamadas de más.
+
 ## #20 · Refactor previo a movimientos: puerto, store y fila de transacción a shared
 **Herramienta:** Kiro
 
@@ -689,6 +700,7 @@ tests (movidos, ninguno perdido), ng build OK. No se escribieron pantallas.
 
 **Decisión:** ✅ aceptado
 **Por qué:** Acepté el refactor porque permite que las distintas features compartan cuentas y transacciones sin depender unas de otras. También aproveché para unificar los nombres en el código y mantener la misma terminología en archivos, componentes, estilos y tests, sin cambiar el comportamiento existente.
+
 ## #21 · Pantalla de movimientos (solo lectura)
 **Herramienta:** Kiro
 
@@ -774,6 +786,7 @@ sin dependencias nuevas.
 
 **Decisión:** ✅ aceptado
 **Por qué:** Acepté la implementación porque los filtros quedan sincronizados con la URL y la paginación sigue dependiendo de la API, sin perder consistencia.
+
 ## #22 · Registrar ingreso y gasto (alta de transacción)
 **Herramienta:** Kiro
 
@@ -850,6 +863,7 @@ los mappers (salvo el test de caracterización) y no se importó entre features.
 
 **Decisión:** ✅ aceptado con modificaciones
 **Por qué:** Acepté la implementación con algunos ajustes porque pude mantener el alta desacoplada de accounts y evitar que el diálogo aumentara el bundle inicial. También revisé la validación del monto y los casos de doble clic, errores y cierre durante el envío, para asegurarme de que el usuario siempre reciba una respuesta clara.
+
 ## #23 · Lógica de transferencias (store y tracker, sin pantalla)
 **Herramienta:** Kiro
 
@@ -939,6 +953,7 @@ entre features.
 
 **Decisión:** ✅ aceptado con modificaciones
 **Por qué:** Acepté la implementación con modificaciones porque pude reutilizar la lógica de dominio y el store de cuentas sin duplicar responsabilidades. Me pareció especialmente importante corregir el problema de las lecturas pisadas, para asegurarme de que una transferencia nunca se valide con un saldo desactualizado. También revisé los casos de error, seguimiento y reintento para evitar transferencias duplicadas.
+
 ## #24 · Pantalla de transferencias (/transfers)
 **Herramienta:** Kiro
 
@@ -1020,9 +1035,95 @@ desenvolver `{ transfer: {...} }`.
 transfer-destinations, todo con tests de comportamiento, un test de integración con router y
 stores reales y puertos que cuentan y lanzan a la 12ª (conteos create 1, getById 2, cuentas 3,
 pendientes 3) y un test de que salir durante el seguimiento no deja timers. El fix del envelope
-devolvió el seguimiento a confirmar en vez de quedar siempre incierto. De 535 a 583 tests (582 de
+devolvió el seguimiento a confirmar en vez de quedar siempre incierto. De 535 a 583 tests (47 de
 la pantalla + 1 del envelope), ng build OK (el warning de budget es previo). Sin dependencias
 nuevas, sin tocar application ni la política, sin imports entre features.
 
 **Decisión:** ✅ aceptado con modificaciones
 **Por qué:** Acepté la implementación con modificaciones porque la pantalla reutiliza la lógica del store y mantiene los componentes presentacionales. También revisé los estados del formulario, los destinos no disponibles y los casos de reintento. Durante las pruebas encontramos un problema real en el adaptador: no estaba desenvolviendo la respuesta de la API. Corregí el mapeo y los tests para que reflejaran el formato real de la respuesta.
+
+## #25 · Pantalla de gastos (resumen por categoría, con separación por cuenta)
+**Herramienta:** Kiro
+
+**Prompt:** (resumen) Agregar una pantalla "Gastos": un resumen de gastos por categoría, en una
+pestaña nueva de la barra a la derecha de "Transferencias". Implementarla directa (sin propuesta
+previa) y con pocas piezas, reusando lo existente (TransactionPort, Money, formatMoney,
+MoneyAmount, categoryLabel, StatePanel, tokens de color). Sin dependencias nuevas (nada de
+librerías de gráficos), sin tocar transfer-policy, los mappers ni la lógica existente, sin
+importar entre features. Piezas: una función de dominio pura, un store con signals y la página
+(más un presentacional para la lista). Ruta /expenses lazy con title 'Gastos' solo en la ruta
+(sin el servicio Title) y la entrada en la barra del shell y en el menú hamburguesa. En
+iteraciones siguientes pedí poder separar los gastos por cuenta (elegí un selector de cuenta
+derivado de los propios gastos, ocultando el de moneda cuando hay una cuenta elegida y sin
+re-leer) y que ese selector mostrara el nombre con el formato "Nombre - id (moneda)".
+
+### Decisiones que tomé yo (fijadas en el prompt o elegidas entre las alternativas de Kiro)
+- **Qué es un gasto:** SOLO type 'expense' con status 'completed'. Las transferencias (aunque
+  sean salientes) no son gastos, y las fallidas o pendientes no movieron dinero. La función de
+  dominio filtra otra vez aunque la consulta ya lo haga.
+- **Nunca mezclar monedas:** el resumen es por moneda (selector con las monedas que aparecen en
+  los gastos), sin total general. Suma con Money.plus (centavos exactos), nada de floats.
+- **Período:** "Todo el historial" (por defecto) o un mes; los meses salen de los datos, del más
+  reciente al más antiguo. El mes se define en la zona horaria local del navegador, no en UTC
+  (un gasto de 02:00Z del 1 de octubre es septiembre en Buenos Aires): la función de dominio
+  recibe la zona por parámetro y usa Intl.DateTimeFormat con timeZone, no Date.getMonth(). La
+  página le pasa Intl.DateTimeFormat().resolvedOptions().timeZone.
+- **Lectura:** TransactionPort.list con type expense, status completed y pageSize 50, recorriendo
+  todas las páginas en secuencia con tope de 20. Nunca un resumen con datos incompletos: si se
+  supera el tope o falla una página, error con reintento y ningún total. Contador de generación
+  chequeado tras cada await y en los fallos. Se lee al entrar y con un botón Actualizar
+  (disabledInteractive con guard propio contra el doble clic). Cambiar de período, de moneda o de
+  cuenta NO vuelve a leer: solo recomputa en el dominio.
+- **Dominio:** summarizeExpenses(transactions, { currency, period, accountId, timeZone, labelOf })
+  devuelve el total del período como Money y las categorías con su Money, su cantidad y su
+  proporción (0..1, solo para el ancho de la barra), de mayor a menor; el empate se desempata por
+  el texto en español, que llega como labelOf(category) porque el dominio no puede importar de
+  shared/ui. Más monthsWithData, currenciesWithData y accountsWithData.
+- **Separación por cuenta (Opción A, y no la B de desglose dentro del resumen):** un selector
+  "Cuenta" con "Todas las cuentas" (por defecto) + las cuentas presentes en los gastos, derivadas
+  por accountsWithData (cada una con su moneda, en orden de aparición, sin lecturas extra). Al
+  elegir una cuenta, la moneda queda implícita en la de la cuenta y el selector de moneda se
+  oculta; con "Todas las cuentas" vuelve. Como cada cuenta tiene una sola moneda, filtrar por
+  cuenta nunca mezcla monedas. summarizeExpenses y monthsWithData aceptan un accountId opcional
+  (null = todas) y filtran también por cuenta. Cambiar de cuenta resetea el período a "Todo el
+  historial" para no mostrar un mes sin datos en ese alcance.
+- **Nombre en el label del selector de cuenta:** inyecté AccountsStore en la página SOLO para
+  resolver el nombre (mapa id -> name), con ensureLoaded() una vez en paralelo; el resumen no
+  espera a esa lectura. El label es "Nombre - id (moneda)" y, si el nombre aún no cargó, falló o
+  la cuenta no está en AccountsStore, cae a "id (moneda)" para no romper la fila. Dejé el id
+  completo aunque haya nombre, porque los nombres pueden repetirse y lo que distingue una cuenta
+  es el id.
+- **Pantalla:** h1 "Gastos", selectores de cuenta, moneda y período con labels, el total con
+  MoneyAmount y la lista de categorías ordenada (nombre en español con categoryLabel, monto y una
+  barra CSS). Las barras usan un solo token (--color-primary) sobre un fondo de token y son
+  decorativas (aria-hidden); la representación accesible es una tabla real con caption ("Gastos
+  por categoría, ARS, octubre de 2026", con la cuenta cuando hay una elegida) y columnas Categoría
+  y Monto. Estados: cargando, error con reintento, "Todavía no registraste gastos" (ninguno) y
+  "No hay gastos en este período" (período vacío). Región aria-live polite que anuncia el
+  resultado al cambiar cuenta, período o moneda. Una sola columna, 320 px, dos temas.
+- **Tests:** solo los de la función de dominio (suma exacta 0,10+0,20=30 centavos, nunca mezcla
+  monedas, solo cuentan gastos completados, el mismo gasto cae en octubre o septiembre según la
+  zona, orden y empates, período vacío, filtro por cuenta en summarizeExpenses y monthsWithData, y
+  accountsWithData con orden de aparición e ignorando transfers/ingresos/pending/failed). Sin
+  tests de componente ni de integración para esta pantalla.
+
+### Supuesto que avisé
+- En el repo no existe un componente "app-spinner"; el estado de carga usa el StatePanel (que ya
+  trae role="status" y mat-progress-spinner), igual que el resto de las pantallas. El botón
+  Actualizar reusa el mat-progress-spinner inline como en la lista de cuentas.
+
+### Test preexistente actualizado (avisado)
+- shell.component.spec.ts enumeraba tres links de navegación; pasó a verificar los cuatro con
+  "Gastos" al final. El test de títulos por ruta no cambió (solo comprueba las tres rutas
+  previas).
+
+**Resultado:** features/expenses con la función de dominio (summarizeExpenses, monthsWithData,
+currenciesWithData, accountsWithData y el filtro opcional por accountId) y sus tests, el store con
+signals (todas las páginas, tope 20, generación, sin resumen parcial), la página con los selectores
+de cuenta/moneda/período y un presentacional de lista con la tabla accesible y las barras CSS; ruta
+/expenses lazy (title en la ruta) y la entrada "Gastos" en el shell. De 604 a 621 tests (17 de
+dominio entre la creación y la separación por cuenta), ng build OK (el warning de budget es previo
+y la feature va en chunk lazy).
+
+**Decisión:** ✅ aceptado
+**Por qué:** Acepté la implementación porque el resumen mantiene el dinero en el dominio (suma exacta en centavos y sin mezclar monedas) y respeta que la zona horaria defina el mes. El filtro por cuenta reusa el mismo resumen de dominio sin re-leer, con las cuentas salidas de los propios gastos y el nombre con fallback al id.

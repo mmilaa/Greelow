@@ -2,10 +2,14 @@
 
 ### 1. Transferencias entre monedas distintas
 Decidí bloquearlas en una primera etapa. Probé transferir 5000 de una cuenta en ARS a otra en USD y la API lo acreditó sin convertir nada. Prefiero primero no permitirlo y luego aceptarlas aplicando una conversión.
+Evalué la posibilidad de agregar conversión usando una API de cotizaciones, pero no era suficiente porque la API usa el mismo monto para ambas partes de la transferencia. Tampoco servía resolverlo creando dos movimientos por separado, porque no sería una operación atómica y no habría forma de revertirla si algo fallaba. Por eso mantuve el bloqueo y dejé como solución definitiva un cambio en el backend.
 
 ### 2. Estados asincrónicos (pending -> completed)
-Al crear una transferencia nace en `pending` y la API la liquida sola a `completed` alrededor de un segundo y medio después, sin que nadie vuelva a llamar al endpoint. Lo verifiqué midiendo tiempos (`docs/api-samples/05-balance-timing.txt`): el saldo no cambia mientras está `pending` y recién baja al pasar a `completed`. Decidí mostrar un badge "Procesando" y hacer un polling corto y acotado: consulto cada 1000 ms, con un máximo de 6 intentos, más un refresco al volver a la pantalla. Elegí esos valores porque la API liquida en ~1,5 s, así que 6 intentos dan margen de sobra sin colgarse. Nunca polling infinito: si se agotan los intentos, muestro "no pudimos confirmar" con una acción para refrescar.
-Si la consulta en sí falla (error de red o 500), eso no es un fallo de la transferencia: lo trato como si siguiera `pending` (reintento si quedan intentos, "no pudimos confirmar" si se agotan), nunca como `failed`. Solo marco una transferencia como fallida si la API dice explícitamente `failed`.
+
+Una transferencia nace en `pending` y la API la liquida sola a `completed` alrededor de un segundo y medio después, sin que nadie vuelva a llamar al endpoint. Lo verifiqué midiendo tiempos: el saldo no cambia mientras está `pending` y recién baja al completarse (`docs/api-samples/05-balance-timing.txt`, y en `44-…` y `45-…` la misma transferencia pendiente y completada).
+Decidí seguirla con un polling corto y acotado. Al crearla, la pantalla muestra "Procesando" con un spinner y consulta `GET /transfers/:id` cada 1000 ms, con un máximo de 6 intentos. La primera consulta sale un segundo después de crear, porque el POST ya dice que está pendiente. Como la API liquida en ~1,5 s, la segunda consulta ya la ve completada, y 6 intentos dan margen de sobra sin quedarse consultando para siempre. Si se agotan, muestro "No pudimos confirmar" con un botón "Verificar de nuevo" que hace una consulta más.
+Si la consulta en sí falla (error de red o 500), no lo trato como un fallo de la transferencia sino como si siguiera pendiente: reintento si quedan intentos y, si se agotan, "no pudimos confirmar". Solo la marco como fallida si la API dice explícitamente `failed`. Si la sesión expiró (401), corto el seguimiento.
+No retomo el seguimiento al volver a la pantalla: si el usuario sale mientras la transferencia está en proceso, se cancelan los temporizadores, pero la transferencia sigue su curso en el servidor y la tarjeta de la cuenta muestra "en proceso" hasta que se liquida. El costo es que en ese caso el resultado no se ve en esta pantalla.
 
 ### 3. Fondos insuficientes
 Decidí validar antes de enviar contra el saldo disponible (no el contable) y, de todas formas, manejar el 422 que devuelve la API (`docs/api-samples/08-error-422.txt`). La validación del cliente es la única defensa real contra el sobregiro, pero no reemplaza al 422 porque hay condiciones de carrera que el cliente no ve. Por eso también bloqueo el envío mientras haya una transferencia en vuelo desde esa cuenta.
@@ -26,7 +30,16 @@ La cuenta puede quedar en saldo negativo (lo vi en la condición de carrera). De
 Se guardan los montos como enteros en la unidad mínima (centavos) y no como decimales porque con número de punto flotante las sumas y comparaciones no son exactas, y acá estas comparaciones deciden si una transferencia se hace o no. La aritmética (sumar, restar, comparar) solo se permite entre la misma moneda; mezclar monedas es un error de dominio.
 
 ### 9. Decimales en montos
-Los montos que ingresa el usuario no se redondean: limito a 2 los decimales que puede ingresar. Esto es porque un número en JavaScript no puede representar exactamente valores como 1.005. Los montos de la API ya vienen con 2 decimales como máximo, y `Money.fromDecimal` redondea solo como defensa. La cantidad de decimales no está hardcodeada: vive en un mapa por moneda en `Currency` (hoy ARS, USD y EUR usan 2), así que si entra una moneda con otra escala el factor de conversión sale de ahí. Las entradas inválidas (NaN, Infinity, no enteros en centavos o fuera del rango entero seguro) se rechazan con un error de dominio (`InvalidAmountError`) en vez de propagar valores corruptos.
+Primero una corrección de lo que daba por supuesto: la API **no** limita los decimales. En una prueba aceptó y guardó un gasto de 12.345. Entonces separé la escritura de la lectura:
+
+- **Escritura estricta.** El formulario solo deja ingresar hasta 2 decimales y nunca redondea lo que escribe el usuario: o es válido o se rechaza. Un número de JavaScript no puede representar exactamente valores como 1.005, así que redondear un monto tipeado me obligaría a adivinar su intención.
+- **El monto es un campo de texto**, no `type="number"` (que acepta cosas como `1e3`, cambia el valor con la rueda del mouse y depende de la configuración regional). Acepta dígitos con una coma o un punto y 1 o 2 decimales. No acepta separador de miles: `1.234` y `1.234,56` se rechazan en lugar de adivinar si el punto es de miles o decimal, y el mensaje lo explica. Los centavos se arman con enteros a partir de los dígitos, sin pasar por números de punto flotante.
+- **Lectura tolerante.** Lo que venga de la API con más de 2 decimales se redondea al centavo más cercano al leerlo. No lo rechazo, porque un solo registro así, que cualquier otro cliente puede crear, dejaría esa cuenta inutilizable.
+
+El costo es que puede haber un centavo de diferencia entre la suma de lo que muestro y el saldo: en la prueba, 855000 − 12,35 + 10 da 854997,65 y la API muestra 854997,66.
+
+La cantidad de decimales no está hardcodeada: vive en un mapa por moneda en `Currency` (hoy ARS, USD y EUR usan 2), así que si entrara una moneda con otra escala el factor sale de ahí. Las entradas inválidas (NaN, Infinity o fuera del rango entero seguro) se rechazan con un error de dominio (`InvalidAmountError`) en vez de propagar valores corruptos.
+
 
 ### 10. Angular Material
 Usé Angular Material para los componentes de UI (formularios, tabla, paginador, mensajes). No es lo que se evalúa en la prueba, así que prefiero invertir el tiempo en el dominio y en los estados de las operaciones, y de paso obtengo accesibilidad básica sin escribirla. Lo restringí a la capa de UI para que la lógica de negocio no dependa de ninguna librería de componentes.
@@ -94,7 +107,9 @@ Permito nombres repetidos porque cada cuenta tiene un id que la identifica y que
 Separé la carga de la cuenta y la de sus movimientos para que un error en estos últimos no oculte los datos de la cuenta. También cuidé que al entrar al detalle no se disparen cargas duplicadas.
 
 ### 26. Filtros de movimientos: selección única, sin multi-valor
-Dejé los filtros como selección única porque la API solo permite filtrar por un valor por campo y se encarga de la paginación. Permitir varios valores habría complicado el filtrado y podía hacer que el total y las páginas no fueran correctos. Preferí mantener la paginación confiable.
+Dejé cada filtro como selección única. Probé qué hace la API cuando se repite un parámetro (`type=expense&type=income`) y da error. Combinar filtros distintos sí es lo que el README declara (cuenta, tipo, estado, categoría y búsqueda a la vez), y la pantalla lo hace; lo que no soporta es más de un valor para el mismo filtro.
+
+Descarté la selección múltiple porque la API no la admite. Para ofrecerla tendría que hacer una consulta por cada valor y unir los resultados, o leer todo el historial y filtrar en el cliente. En ambos casos la paginación, el total y la cantidad de páginas dejarían de salir del servidor, que es lo que más quería mantener confiable. El costo es que no se pueden ver, por ejemplo, gastos y transferencias a la vez sin dejar el filtro de tipo en "Todos". Tampoco hay filtro por fecha, porque la API no lo ofrece.
 
 ### 27. Diálogo de registrar movimiento: launcher desacoplado y carga diferida
 Desacoplé el detalle de cuentas de la feature de movimientos usando un launcher compartido, sin importar directamente el diálogo. También dejé la implementación con lazy loading para no sumar Material y el diálogo al bundle inicial. El launcher evita aperturas duplicadas y permite reintentar si falla la carga.
@@ -105,7 +120,34 @@ Hago una lectura nueva de pendientes y cuentas antes de validar, para no usar un
 ### 29. Pantalla de transferencias: componentes que no se destruyen y motivos visibles
 Separé el formulario y el panel de estado para mantener la lógica fuera de los componentes. Decidí no destruir el formulario durante el proceso para conservar lo que el usuario ingresó y permitir reintentar sin empezar de cero. También agregué los motivos por los que ciertos destinos no se pueden seleccionar, incluyendo una explicación accesible debajo del campo.
 
-### 31. Tradeoffs / lo que no implementé y por qué
-1. No implementé la conversión de monedas en las transferencias entre monedas distintas: por ahora las bloqueo. La conversión quedaría como mejora futura.
-2. No implementé edición de cuentas: la moneda es inmutable y el nombre no se puede editar por ahora; quedaría como mejora futura.
-3. El saldo disponible solo protege a quien usa esta app; el sobregiro provocado desde afuera o por condiciones de carrera no se puede evitar desde el cliente. La solución de fondo es del backend.
+### 30. Un gasto puede dejar la cuenta en negativo
+Probé registrar un gasto mayor al saldo disponible y la API lo aceptó, dejando la cuenta en negativo. Decidí permitirlo porque registrar un gasto es dejar constancia de algo que ya ocurrió, no realizar un pago.
+
+En ese caso muestro un aviso, pero no bloqueo el registro. El mensaje aclara que la cuenta quedará en negativo y no se podrán hacer transferencias desde ella hasta cubrir el saldo. El aviso se calcula sobre el saldo disponible y solo se muestra si ese dato se conoce.
+
+### 31. Orden de lectura: pendientes primero, saldo después
+Para calcular el saldo disponible necesito consultar las transferencias pendientes y después las cuentas. Hago las consultas en secuencia y no en paralelo. Lo decidí así para evitar que una transferencia que se complete entre ambas consultas termine sin descontarse del disponible, lo que podría permitir un sobregiro. Prefiero que, en ese caso, el disponible quede momentáneamente por debajo del real antes que por encima.
+El costo es que durante un instante el usuario puede ver menos saldo disponible del que realmente tiene.
+
+### 32. Los pendientes se leen con una consulta propia
+Evalué usar los últimos movimientos para obtener las transferencias pendientes y ahorrar una consulta, pero no era seguro: la API no garantiza un orden y podría haber pendientes que no aparezcan entre los últimos 5.
+Tampoco conviene recorrer todo el historial porque la cantidad de consultas crecería con los movimientos. Por eso decidí pedir todas las transferencias con status=pending&type=transfer, paginando hasta un máximo de 20 páginas (1000 pendientes).
+Si se supera ese límite o falla alguna página, descarto la lista parcial y muestro solo el saldo contable con un aviso, para no calcular un disponible incorrecto.
+El costo es hacer dos consultas a /transactions al entrar al detalle de una cuenta. Como se hacen en momentos distintos, los resultados pueden tener una pequeña diferencia si una transferencia se liquida entre ambas.
+
+### 33. Si no se puede calcular el disponible, no se transfiere
+Cuando falla la lectura de pendientes o de cuentas, el disponible es desconocido. Decidí no permitir la transferencia, con un mensaje claro y un botón para reintentar la lectura, porque permitirla reabriría el sobregiro que encontré. El costo es que una falla de lectura bloquea al usuario aunque su saldo alcance.
+
+### 34. Orden de los últimos movimientos (supuesto)
+En el detalle muestro los 5 últimos tomando los primeros que devuelve la API, sin reordenar, porque en el seed vienen del más nuevo al más viejo. El README no promete ese orden: es un supuesto que verifiqué en el seed y no una garantía. Reordenar en el cliente solo ordenaría la página que pedí, así que tampoco lo arreglaría si la API cambiara.
+
+### 35. Dinero en pantalla: código de moneda siempre visible
+Muestro el código de moneda delante del monto (`ARS 1.234,56`; negativo, `-ARS 1.234,56`) en lugar del símbolo. Con el formato es-AR, los pesos usan `$`, los dólares `US$` y los euros `EUR`: tres criterios distintos, y en una billetera con varias monedas un `$` ambiguo es un riesgo. El negativo lleva signo y no depende solo del color, y los montos no se parten en dos líneas. El formato vive en el dominio (`formatMoney`) para no decidirlo en cada pantalla. Se ve menos amigable que un símbolo, y lo acepto.
+
+### 36. Colores y accesibilidad
+Los colores salen de tokens nombrados por función (superficie, texto, positivo, negativo) en un único archivo, conectados con el tema de Material, así que se puede cambiar el aspecto (por ejemplo, agregar un tema oscuro) sin tocar componentes. La paleta que elegí no tenía colores para el dinero, así que agregué verde, rojo y ámbar para positivo, negativo y advertencia. Verifiqué el contraste (WCAG AA) con un script (`tools/contrast.mjs`) que lee los tokens, en lugar de confiar en estimaciones, y ajusté el verde para ganar margen sobre su fondo.
+
+
+### 37. Tradeoffs / lo que no implementé y por qué
+1. No implementé edición de cuentas: la moneda es inmutable y el nombre no se puede editar por ahora; quedaría como mejora futura.
+2. El saldo disponible solo protege a quien usa esta app; el sobregiro provocado desde afuera o por condiciones de carrera no se puede evitar desde el cliente. La solución de fondo es del backend.
