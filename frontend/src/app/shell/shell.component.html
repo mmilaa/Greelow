@@ -33,6 +33,31 @@
     }
   </mat-menu>
 
+
+  <button
+  mat-icon-button
+  [matMenuTriggerFor]="themeMenu"
+  [attr.aria-label]="'Tema: ' + currentTheme().label"
+>
+  <mat-icon aria-hidden="true">{{ currentTheme().icon }}</mat-icon>
+</button>
+<mat-menu #themeMenu="matMenu" aria-label="Tema">
+  @for (option of themeOptions; track option.value) {
+    <button
+      mat-menu-item
+      role="menuitemradio"
+      [attr.aria-checked]="theme.preference() === option.value"
+      (click)="theme.set(option.value)"
+    >
+      <mat-icon aria-hidden="true">{{ option.icon }}</mat-icon>
+      <span>{{ option.label }}</span>
+      @if (theme.preference() === option.value) {
+        <mat-icon class="menu-check" aria-hidden="true">check</mat-icon>
+      }
+    </button>
+  }
+</mat-menu>
+
   <!-- User menu -->
   <button mat-button class="shell-user-button" [matMenuTriggerFor]="userMenu" [attr.aria-label]="'Cuenta de ' + (userName()?.name ?? '')">
     <mat-icon>account_circle</mat-icon>

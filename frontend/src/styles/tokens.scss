@@ -1,12 +1,41 @@
-// Design tokens, named BY FUNCTION (not by colour) so a future dark theme can
-// redefine these same names without touching any component. This is the ONLY
-// place in the app where literal colours are allowed.
-//
-// All contrast pairs verified AA with tools/contrast.mjs. Two values differ
-// from the original palette for accessibility margin: positive is #196e3c
-// (margin over its chip background); border-input stays #7b8ca8 (3.41:1, AA UI).
+// Design tokens, named BY FUNCTION (not by colour) so the dark theme redefines the same
+// names without touching any component. This is the ONLY place where literal colours are allowed.
+// Contrast of every pair, in both themes, is verified by tools/contrast.mjs.
+
+// Dark theme values. Used twice below (explicit choice and system preference).
+@mixin dark-theme-tokens {
+  --color-text: #e6ecf7;
+  --color-text-soft: #a9b6cc;
+  --color-on-primary: #0f1726;
+  --color-primary: #8fb0e8;
+  --color-primary-hover: #a9c4f0;
+  --color-bg: #0f1726;
+  --color-surface: #172033;
+  --color-surface-alt: #1f2a40;
+  --color-border: #2c3a55;
+  --color-border-input: #7b8ca8;
+  --color-accent-soft: #3b2432;
+
+  --color-bar: #1a2540;
+  --color-on-bar: #e6ecf7;
+
+  --color-positive: #6fd39a;
+  --color-negative: #ff9a8f;
+  --color-warning: #f0c35a;
+  --color-positive-bg: #123524;
+  --color-negative-bg: #3d1b19;
+  --color-warning-bg: #3a2c0a;
+
+  --color-shadow: #000000;
+  --color-scrim: #000000;
+
+  // Shadows are almost invisible on dark surfaces: a 1px ring with the border colour marks the card.
+  --shadow-card: 0 0 0 1px var(--color-border), 0 2px 8px rgb(0 0 0 / 40%);
+}
 
 :root {
+  color-scheme: light;
+
   // --- colour (light theme) ---
   --color-text: #1d3156;
   --color-text-soft: #4a5b78;
@@ -20,8 +49,6 @@
   --color-border-input: #7b8ca8;
   --color-accent-soft: #fde4de;
 
-  // Navigation bar: its own tokens so a dark theme can set them independently
-  // (reusing --color-text as the bar background would break when text turns light).
   --color-bar: #1d3156;
   --color-on-bar: #ffffff;
 
@@ -32,7 +59,6 @@
   --color-negative-bg: #fbe7e4;
   --color-warning-bg: #fcefd2;
 
-  // Shadow and scrim (overlay backdrop) base colours.
   --color-shadow: #000000;
   --color-scrim: #000000;
 
@@ -54,4 +80,18 @@
 
   // --- layout ---
   --page-max-width: 960px;
+}
+
+// Explicit choice by the user (data-theme="dark").
+:root[data-theme='dark'] {
+  color-scheme: dark;
+  @include dark-theme-tokens;
+}
+
+// No explicit choice: follow the system. data-theme="light" never matches this block.
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme]) {
+    color-scheme: dark;
+    @include dark-theme-tokens;
+  }
 }
